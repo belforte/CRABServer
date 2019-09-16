@@ -32,6 +32,7 @@ NODE_DEFAULTS = {
 STATUS_CACHE_FILE = "task_process/status_cache.txt"
 LOG_PARSING_POINTERS_DIR = "task_process/jel_pickles/"
 FJR_PARSE_RES_FILE = "task_process/fjr_parse_results.txt"
+CURRENT_STATUS_FOR_COMPARE = "task_process/status_jel.txt"
 
 #
 # insertCpu, parseJobLog, parsNodeStateV2 and parseErrorReport
@@ -333,6 +334,13 @@ def storeNodesInfoInFile():
     nodesStorage.close()
 
     move(tempFilename, STATUS_CACHE_FILE)
+
+    # write jobs status only, no checkpoint info, to a file for comparison with other method
+    testFileName = (CURRENT_STATUS_FOR_COMPARE + ".%s") % os.getpid()
+    testFile = open(testFileName,'w')
+    testFile.write(str(nodes))
+    testFile.close()
+    move(testFileName, CURRENT_STATUS_FOR_COMPARE)
 
 def summarizeFjrParseResults(checkpoint):
     '''

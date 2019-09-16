@@ -9,6 +9,25 @@ function cache_status {
     python task_process/cache_status.py
 }
 
+function cache_status_jel{
+    log "Running cache_status_jel.py"
+    python task_process/cache_status_jel.py
+}
+
+function compare_status {
+  log "Comparing status from readevent and jel"
+  diff -q task_process/status_readev.txt task_process/status_jel.txt
+  statusDiff = $?
+  if [ $statuDiff ]; then
+    errorDir= "/tmp/cache_errors/"`basename $PWD`"/"`date +"%F-%R"`"/"
+    log " ... STATUS IS DIFFERENT ! Save for investigation in " $errorDir
+    mkdir -p -m 777 errorDir
+    cp task_process/status_readev.txt task_process/status_jel.txt $errorDir
+  else
+    log " ... Comparison successfull"
+  fi
+}
+
 function manage_transfers {
     log "Running transfers.py"
     timeout 15m python task_process/transfers.py
@@ -102,6 +121,8 @@ do
 
     # Run the parsing script
     cache_status
+    cache_status_jel
+    compare_status
     manage_transfers
     sleep 300s
 

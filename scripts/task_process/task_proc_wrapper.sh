@@ -17,11 +17,11 @@ function cache_status_jel {
 function compare_status {
   log "Comparing status from readevent and jel"
   diff -q task_process/status_readev.txt task_process/status_jel.txt
-  statusDiff = $?
-  if [ $statuDiff ]; then
-    errorDir= "/tmp/cache_errors/"`basename $PWD`"/"`date +"%F-%R"`"/"
+  statusDiff=$?
+  if [ $statusDiff -ne 0 ]; then
+    errorDir="/tmp/cache_errors/"`basename $PWD`"/"`date +"%F-%R"`"/"
     log " ... STATUS IS DIFFERENT ! Save for investigation in " $errorDir
-    mkdir -p -m 777 errorDir
+    mkdir -p -m 777 $errorDir
     cp task_process/status_readev.txt task_process/status_jel.txt $errorDir
   else
     log " ... Comparison successfull"

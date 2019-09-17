@@ -13,7 +13,7 @@ from shutil import move
 import pickle
 import htcondor
 
-logging.basicConfig(filename='task_process/cache_status.log', level=logging.DEBUG)
+logging.basicConfig(filename='task_process/cache_status_jel.log', level=logging.DEBUG)
 
 NODE_DEFAULTS = {
     'Retries': 0,

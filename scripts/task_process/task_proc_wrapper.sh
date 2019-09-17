@@ -9,7 +9,7 @@ function cache_status {
     python task_process/cache_status.py
 }
 
-function cache_status_jel{
+function cache_status_jel {
     log "Running cache_status_jel.py"
     python task_process/cache_status_jel.py
 }

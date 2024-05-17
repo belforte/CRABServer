@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 
 from rucio.common.exception import RuleNotFound
 
-from ServerUtilities import MAX_DAYS_FOR_TAPERECALL, TASKLIFETIME, getTimeFromTaskname
+from ServerUtilities import MAX_DAYS_FOR_TAPERECALL, getTimeFromTaskname
 from RESTInteractions import CRABRest
 from RucioUtils import getNativeRucioClient
 from TaskWorker.MasterWorker import getRESTParams
@@ -124,9 +124,9 @@ class TapeRecallManager(BaseRecurringAction):
                 self.updateTaskStatus(taskName, 'NEW')
                 # Clean up previous "dataset on tape" warnings
                 self.deleteWarnings(taskName)
-                # Make sure data will stay on disk
-                self.logger.info("Extending rule lifetime to last as long as the task")
-                self.privilegedRucioClient.update_replication_rule(reqId, {'lifetime': TASKLIFETIME})
+                # No need for this rule any more. dataset will be locked on disk as soon as task is submitted
+                self.logger.info("Extending removing rule (set to expire in 4h)")  # some slack, just in case
+                self.privilegedRucioClient.update_replication_rule(reqId, {'lifetime': 4 * 3600})
             else:
                 # still in progress, report status and keep waiting
                 ok = rule['locks_ok_cnt']

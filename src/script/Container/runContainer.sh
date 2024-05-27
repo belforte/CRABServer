@@ -71,7 +71,6 @@ fi
 tmpfile=/tmp/monit-${uuid}.txt
 
 if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
-  echo "checkpoint 01"
   if docker ps | grep ${SERVICE} | wc -l ; then
     msg="There already is a running container for $SERVICE. It is likely stuck. Stopping, removing and then starting again."
     echo $msg
@@ -80,14 +79,11 @@ if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
     # otherwise we keep track in /tmp/monit-*.txt that we are having problems
     echo $msg > $tmpfile
     docker container stop $SERVICE
-    echo "checkpoint 1"
   fi
   if docker ps -a | grep ${SERVICE} | wc -l ; then
-    echo "checkpoint 2"
     docker container rm $SERVICE
   fi
 fi
-echo "checkpoint 3"
 
 # get os version
 OS_Version=$(cat /etc/os-release |grep VERSION_ID|cut -d= -f2|tr -d \"|cut -d. -f1)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## bash ./cicd/build/monit-taskworker/monit_build.sh v3.240111
+## bash ./cicd/build/monit-taskworker/monit_build.sh
 
 TAG=pypi-test12-1716447194
 

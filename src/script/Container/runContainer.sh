@@ -82,8 +82,10 @@ if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
     docker container stop $SERVICE
     echo "checkpoint 1"
   fi
-  echo "checkpoint 2"
-  docker container rm $SERVICE
+  if docker ps -a | grep ${SERVICE} | wc -l ; then
+    echo "checkpoint 2"
+    docker container rm $SERVICE
+  fi
 fi
 echo "checkpoint 3"
 

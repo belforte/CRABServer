@@ -80,9 +80,12 @@ if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
     # otherwise we keep track in /tmp/monit-*.txt that we are having problems
     echo $msg > $tmpfile
     docker container stop $SERVICE
+    echo "checkpoint 1"
   fi
+  echo "checkpoint 2"
   docker container rm $SERVICE
 fi
+echo "checkpoint 3"
 
 # get os version
 OS_Version=$(cat /etc/os-release |grep VERSION_ID|cut -d= -f2|tr -d \"|cut -d. -f1)

@@ -72,9 +72,7 @@ tmpfile=/tmp/monit-${uuid}.txt
 
 if [[ "${SERVICE}" == TaskWorker_monit_*  ]]; then
   echo "checkpoint 01"
-  countrunning=$(docker ps | grep ${SERVICE} | wc -l)
-  echo "checkpoint 02"
-  if [[ ! $countrunning -eq "0" ]]; then
+  if docker ps | grep ${SERVICE} | wc -l ; then
     msg="There already is a running container for $SERVICE. It is likely stuck. Stopping, removing and then starting again."
     echo $msg
     # writing now that the previous execution of the script is hanging.

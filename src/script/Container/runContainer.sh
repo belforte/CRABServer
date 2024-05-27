@@ -64,7 +64,7 @@ for d in "${dir[@]}"; do
 done
 
 uuid=$(uuidgen)
-if [[ -n "${LOGUUID}+1" ]]; then
+if [[ -z "${LOGUUID}" ]]; then
     # if LOGUUID is set, then use it
     uuid=${LOGUUID}
 fi

@@ -75,6 +75,14 @@ RUN pip install -r requirements.txt \
     && pip install --no-deps wmcore==$(cat wmcore_version) \
     && pip cache purge
 
+# horrible hack to use htcondor2/classad2 bindings for python 3.9
+# which came via the debian install, on our python 3.8
+# maybe we can simply put those .so in our repo (all in all this is
+# temporary and save the effort of the full apt-get install condor
+RUN cp /usr/lib/python3/dist-packages/htcondor2/htcondor2_impl.cpython-39-x86_64-linux-gnu.so /usr/local/lib/python3.8/site-packages/htcondor2/htcondor2_impl.cpython-38-x86_64-linux-gnu.so && cp /usr/lib/python3/dist-packages/classad2/classad2_impl.cpython-39-x86_64-linux-gnu.so /usr/local/lib/python3.8/site-packages/classad2/classad2_impl.cpython-38-x86_64-linux-gnu.so
+
+
+#
 # install crabserver
 # will replace with pip later
 COPY src/python/ ${WDIR}/srv/current/lib/python/site-packages/

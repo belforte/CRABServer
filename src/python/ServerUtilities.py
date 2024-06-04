@@ -432,7 +432,7 @@ def parseJobAd(filename):
             Note that we also have a parseAd() method inside CMSRunAnalysis.py which should
             do finely also in cmscp.py
             As a start I will remove reference to classAd in here (was commented anyhow) and
-            avoid using is when we can import classad
+            avoid using is when we can import classad2 as classad
     """
     jobAd = {}
     with open(filename, 'r', encoding='utf-8') as fd:

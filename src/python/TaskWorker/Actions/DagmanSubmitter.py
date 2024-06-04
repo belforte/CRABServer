@@ -10,8 +10,8 @@ import sys
 
 from http.client import HTTPException
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 import CMSGroupMapper
 import HTCondorLocator
@@ -491,12 +491,11 @@ class DagmanSubmitter(TaskAction.TaskAction):
         # We switched from local to scheduler universe.  Why?  It seems there's no way in the
         # local universe to change the hold signal at runtime.  That's fairly important for our
         # resubmit implementation.
-        #jobJDL["JobUniverse"] = "12"
         jobJDL["JobUniverse"] = "7"
         jobJDL["HoldKillSig"] = "SIGUSR1"
-        jobJDL["X509UserProxy"] = str(info['user_proxy'])
+        jobJDL["X509UserProxy"] = info['user_proxy']
         # submission command "priority" maps to jobAd "JobPrio" !
-        jobJDL["priority"] = str(info['tm_priority'])
+        jobJDL["priority"] = info['tm_priority']
         jobJDL["Requirements"] = "TARGET.Cpus >= 1"  # see https://github.com/dmwm/CRABServer/issues/8456#issuecomment-2145887432
         jobJDL["Requirements"] = "True"
         environmentString = "PATH=/usr/bin:/bin CRAB3_VERSION=3.3.0-pre1"
@@ -533,18 +532,18 @@ class DagmanSubmitter(TaskAction.TaskAction):
         jobJDL['Args'] = arg
         jobJDL["transfer_input_files"] = str(info['inputFilesString'])
 
+        # for debugging purpose
+        with open('DAGJob.jdl', 'w', encoding='utf-8') as fd:
+            print(jobJDL, file=fd)
+
         htcondor.param['DELEGATE_FULL_JOB_GSI_CREDENTIALS'] = 'true'
         htcondor.param['DELEGATE_JOB_GSI_CREDENTIALS_LIFETIME'] = '0'
         try:
             submitResult = schedd.submit(description=jobJDL, count=1, spool=True)
             clusterId = submitResult.cluster()
             numProcs = submitResult.num_procs()
-            # firstProc = submitResult.first_proc()
-            # htcId = f"{clusterId}.{firstProc}"  # out cluster has only 1 job
-            # resultAds = submitResult.clusterad()
-            myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)
-            schedd.spool(list(myjobs))
-        except  htcondor.HTCondorException as hte:
+            schedd.spool(submitResult)
+        except Exception as hte:
             raise TaskWorkerException(f"Submission failed with:\n{hte}") from hte
 
         self.logger.debug("Condor cluster ID returned from submit is: %s", clusterId)

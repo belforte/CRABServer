@@ -4,9 +4,9 @@ import sys
 import time
 import json
 import errno
-import classad
+import classad2 as classad
 import logging
-import htcondor
+import htcondor2 as htcondor
 from ast import literal_eval
 
 from ServerUtilities import getWebdirForDb, insertJobIdSid

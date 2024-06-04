@@ -25,7 +25,7 @@ from TaskWorker.WorkerExceptions import TaskWorkerException, SubmissionRefusedEx
 from RucioUtils import getWritePFN
 from CMSGroupMapper import get_egroup_users
 
-import classad
+import classad2 as classad
 
 import WMCore.WMSpec.WMTask
 from WMCore.Services.CRIC.CRIC import CRIC

@@ -7,7 +7,7 @@ import subprocess
 import socket
 from collections import namedtuple
 
-import classad
+import classad2 as classad
 
 from ServerUtilities import executeCommand
 from ServerUtilities import MAX_DISK_SPACE, MAX_WALLTIME, MAX_MEMORY

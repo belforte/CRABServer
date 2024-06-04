@@ -101,8 +101,8 @@ from http.client import HTTPException
 import requests
 from requests.auth import HTTPBasicAuth
 
-import htcondor
-import classad
+import htcondor2 as htcondor
+import classad2 as classad
 from WMCore import Lexicon
 from WMCore.DataStructs.LumiList import LumiList
 from WMCore.Services.WMArchive.DataMap import createArchiverDoc

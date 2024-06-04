@@ -34,7 +34,7 @@ import functools
 import subprocess
 from ast import literal_eval
 
-import classad
+import classad2 as classad
 
 from WMCore.DataStructs.LumiList import LumiList
 

@@ -2,8 +2,8 @@
 import re
 import sys
 from http.client import HTTPException
-import htcondor
-import classad
+import htcondor2 as htcondor
+import classad2 as classad
 
 import HTCondorLocator
 from ServerUtilities import FEEDBACKMAIL
@@ -89,7 +89,7 @@ class DagmanKiller(TaskAction):
         try:
             self.schedd.act(htcondor.JobAction.Hold, rootConst)
             self.schedd.act(htcondor.JobAction.Remove, jobConst)
-        except  htcondor.HTCondorException as hte:
+        except  Exception as hte:
             msg = "The CRAB server backend was not able to kill the task,"
             msg += " because the Grid scheduler answered with an error."
             msg += " This is probably a temporary glitch. Please try again later."

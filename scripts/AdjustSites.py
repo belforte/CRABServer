@@ -19,12 +19,15 @@ import traceback
 from datetime import datetime
 from http.client import HTTPException
 
-import classad
-import htcondor
-
 from RESTInteractions import CRABRest
 from ServerUtilities import getProxiedWebDir, getColumn
 
+if 'useHtcV2' in os.environ:
+    import htcondor2 as htcondor
+    import classad2 as classad
+else:
+    import htcondor
+    import classad
 
 def printLog(msg):
     """ Utility function to print the timestamp in the log. Can be replaced

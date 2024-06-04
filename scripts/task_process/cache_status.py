@@ -14,8 +14,14 @@ import copy
 from shutil import move
 import pickle
 import json
-import htcondor
-import classad
+
+if 'useHtcV2' in os.environ:
+    import htcondor2 as htcondor
+    import classad2 as classad
+else:
+    import htcondor
+    import classad
+
 
 logging.basicConfig(filename='task_process/cache_status.log', level=logging.DEBUG)
 

@@ -2,8 +2,8 @@
 
 import os
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 # This is part of the classad module as of HTCondor 8.1.2
 def quote(value):

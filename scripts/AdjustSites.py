@@ -19,8 +19,8 @@ import traceback
 from datetime import datetime
 from http.client import HTTPException
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 from RESTInteractions import CRABRest
 from ServerUtilities import getProxiedWebDir, getColumn

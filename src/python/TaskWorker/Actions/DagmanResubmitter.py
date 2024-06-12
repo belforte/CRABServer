@@ -3,8 +3,8 @@
 from http.client import HTTPException
 import sys
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 import HTCondorLocator
 

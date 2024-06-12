@@ -2,8 +2,8 @@
 import re
 import sys
 from http.client import HTTPException
-import htcondor
-import classad
+import htcondor2 as htcondor
+import classad2 as classad
 
 import HTCondorLocator
 from ServerUtilities import FEEDBACKMAIL

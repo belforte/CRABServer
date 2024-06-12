@@ -10,8 +10,8 @@ import sys
 
 from http.client import HTTPException
 
-import classad
-import htcondor
+import classad2 as classad
+import htcondor2 as htcondor
 
 import CMSGroupMapper
 import HTCondorLocator

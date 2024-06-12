@@ -9,7 +9,7 @@ import tempfile
 from ast import literal_eval
 
 import pycurl
-import classad
+import classad2 as classad
 
 from WMCore.WMSpec.WMTask import buildLumiMask
 from WMCore.DataStructs.LumiList import LumiList

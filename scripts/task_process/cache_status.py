@@ -14,8 +14,8 @@ import copy
 from shutil import move
 import pickle
 import json
-import htcondor
-import classad
+import htcondor2 as htcondor
+import classad2 as classad
 
 logging.basicConfig(filename='task_process/cache_status.log', level=logging.DEBUG)
 

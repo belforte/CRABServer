@@ -7,7 +7,7 @@ import tempfile
 import traceback
 import copy
 
-import htcondor
+import htcondor2 as htcondor
 
 from RESTInteractions import CRABRest
 from RucioUtils import getNativeRucioClient

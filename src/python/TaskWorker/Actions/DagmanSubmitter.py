@@ -533,6 +533,10 @@ class DagmanSubmitter(TaskAction.TaskAction):
         jobJDL['Args'] = arg
         jobJDL["transfer_input_files"] = info['inputFilesString']
 
+        # for debugging purpose
+        with open('DAGJob.jdl', 'w', encoding='utf-8') as fd:
+            print(jobJDL, file=fd)
+
         htcondor.param['DELEGATE_FULL_JOB_GSI_CREDENTIALS'] = 'true'
         htcondor.param['DELEGATE_JOB_GSI_CREDENTIALS_LIFETIME'] = '0'
         try:
@@ -542,8 +546,8 @@ class DagmanSubmitter(TaskAction.TaskAction):
             # firstProc = submitResult.first_proc()
             # htcId = f"{clusterId}.{firstProc}"  # out cluster has only 1 job
             # resultAds = submitResult.clusterad()
-            myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)
-            schedd.spool(list(myjobs))
+            # myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)
+            schedd.spool(submitResult)
         except Exception as hte:
             raise TaskWorkerException(f"Submission failed with:\n{hte}") from hte
 

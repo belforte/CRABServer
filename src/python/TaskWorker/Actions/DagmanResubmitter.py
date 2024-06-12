@@ -105,7 +105,7 @@ class DagmanResubmitter(TaskAction):
                 schedd.act(htcondor.JobAction.Hold, rootConst)
                 schedd.edit(rootConst, "HoldKillSig", 'SIGUSR1')
                 schedd.act(htcondor.JobAction.Release, rootConst)
-            except htcondor.HTCondorException as hte:
+            except Exception as hte:
                 msg = "The CRAB server backend was not able to resubmit the task,"
                 msg += " because the Grid scheduler answered with an error."
                 msg += " This is probably a temporary glitch. Please try again later."

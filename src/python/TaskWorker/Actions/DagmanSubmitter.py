@@ -544,7 +544,7 @@ class DagmanSubmitter(TaskAction.TaskAction):
             # resultAds = submitResult.clusterad()
             myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)
             schedd.spool(list(myjobs))
-        except  htcondor.HTCondorException as hte:
+        except Exception as hte:
             raise TaskWorkerException(f"Submission failed with:\n{hte}") from hte
 
         self.logger.debug("Condor cluster ID returned from submit is: %s", clusterId)

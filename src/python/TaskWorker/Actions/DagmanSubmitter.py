@@ -94,7 +94,7 @@ def addCRABInfoToJobJDL(jdl, info):
     """
     for adName, dictName in SUBMIT_INFO:
         if dictName in info and info[dictName] is not None:
-            jdl[adName] = info[dictName]
+            jdl[adName] = str(info[dictName])
     # extra_jdl and accelerator_jdl are not listed in SUBMIT_INFO
     # and need ad-hoc handling, those are a string of `\n` separated k=v elements
     if 'extra_jdl' in info and info['extra_jdl']:
@@ -108,7 +108,7 @@ def addCRABInfoToJobJDL(jdl, info):
         for keyValue in info['accelerator_jdl'].split('\n'):
             adName, adVal = keyValue.split(sep='=', maxsplit=1)
             # these are built in our code w/o extra spaces
-            jdl[adName] = classad.ExprTree(str(adVal))
+            jdl[adName] = adVal
 
 
 class ScheddStats(dict):
@@ -486,28 +486,28 @@ class DagmanSubmitter(TaskAction.TaskAction):
             jobJDL["+CMSGroups"] = classad.Value.Undefined
 
         # NOTE: Changes here must be synchronized with the job_submit in DagmanCreator.py in CAFTaskWorker
-        jobJDL["+CRAB_Attempt"] = 0
+        jobJDL["+CRAB_Attempt"] = "0"
         jobJDL["+CMS_SubmissionTool"] = classad.quote("CRAB")
         # We switched from local to scheduler universe.  Why?  It seems there's no way in the
         # local universe to change the hold signal at runtime.  That's fairly important for our
         # resubmit implementation.
         #jobJDL["JobUniverse"] = 12
-        jobJDL["JobUniverse"] = 7
+        jobJDL["JobUniverse"] = "7"
         jobJDL["HoldKillSig"] = "SIGUSR1"
         jobJDL["X509UserProxy"] = info['user_proxy']
         # submission command "priority" maps to jobAd "JobPrio" !
-        jobJDL["priority"] = int(info['tm_priority'])  # info stores a string, but HTC wants a number
+        jobJDL["priority"] = info['tm_priority']
         jobJDL["Requirements"] = "TARGET.Cpus >= 1"  # see https://github.com/dmwm/CRABServer/issues/8456#issuecomment-2145887432
-        jobJDL["Requirements"] = True
+        jobJDL["Requirements"] = "True"
         environmentString = "PATH=/usr/bin:/bin CRAB3_VERSION=3.3.0-pre1"
         environmentString += " CONDOR_ID=$(ClusterId).$(ProcId)"
         environmentString += " " + " ".join(info['additional_environment_options'].split(';'))
         # Environment command in JDL requires proper quotes https://htcondor.readthedocs.io/en/latest/man-pages/condor_submit.html#environment
         jobJDL["Environment"] = classad.quote(environmentString)
         jobJDL["+RemoteCondorSetup"] = classad.quote(info['remote_condor_setup'])
-        jobJDL["+CRAB_TaskSubmitTime"] = info['start_time']  # this is an int (seconds from epoch)
-        jobJDL['+CRAB_TaskLifetimeDays'] = TASKLIFETIME // 24 // 60 // 60
-        jobJDL['+CRAB_TaskEndTime'] = int(info['start_time']) + TASKLIFETIME
+        jobJDL["+CRAB_TaskSubmitTime"] = str(info['start_time'])  # this is an int (seconds from epoch)
+        jobJDL['+CRAB_TaskLifetimeDays'] = str(TASKLIFETIME // 24 // 60 // 60)
+        jobJDL['+CRAB_TaskEndTime'] = str(int(info['start_time']) + TASKLIFETIME)
         #For task management info see https://github.com/dmwm/CRABServer/issues/4681#issuecomment-302336451
         jobJDL["LeaveJobInQueue"] = "True"
         jobJDL["PeriodicHold"] = "time() > CRAB_TaskEndTime"

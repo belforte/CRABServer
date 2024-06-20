@@ -116,6 +116,7 @@ class HTCondorDataWorkflow(DataWorkflow):
                   "splitting": '',  # from the db
                   "taskWorker": '',  # from the db
                   "webdirPath": '',  # from the db
+                  "username"         : ''} #from the db
         return [result]
 
     @conn_handler(services=[])

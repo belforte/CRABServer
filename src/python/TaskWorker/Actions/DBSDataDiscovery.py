@@ -623,17 +623,20 @@ if __name__ == '__main__':
 
     rucioClient = getNativeRucioClient(config=config, logger=logging.getLogger())
 
-    fileset = DBSDataDiscovery(config=config, rucioClient=rucioClient)
+    discovery = DBSDataDiscovery(config=config, rucioClient=rucioClient)
     userConfig = {'partialdataset':False,
                   'inputblocks':blockList
                   }
-    discoveryOutput = (
-        fileset.execute(task={'tm_nonvalid_input_dataset': 'T', 'tm_use_parent': 0, 'user_proxy': 'None',
-                          'tm_input_dataset': dbsDataset, 'tm_secondary_input_dataset': dbsSecondaryDataset,
-                          'tm_taskname': 'pippo1', 'tm_username':config.Services.Rucio_account,
-                          'tm_split_algo' : 'automatic', 'tm_split_args' : {'runs':[], 'lumis':[]},
-                          'tm_user_config': userConfig, 'tm_user_files': [],
-                          'tm_dbs_url': DBSUrl}, tempDir=''))
+    discoveryOutput = discovery.execute(task={'tm_nonvalid_input_dataset': 'T', 'tm_use_parent': 0,
+                                              'user_proxy': 'None','tm_input_dataset': dbsDataset,
+                                              'tm_secondary_input_dataset': dbsSecondaryDataset,
+                                              'tm_taskname': 'dummyTaskName',
+                                              'tm_username':config.Services.Rucio_account,
+                                              'tm_split_algo' : 'automatic',
+                                              'tm_split_args' : {'runs':[], 'lumis':[]},
+                                              'tm_user_config': userConfig, 'tm_user_files': [],
+                                              'tm_dbs_url': DBSUrl},
+                                        tempDir='')
     # discoveryOutput.result is a WMCore fileset structure
     fileObjects = discoveryOutput.result.getFiles()
     fileDictionaries = [file.json() for file in fileObjects]

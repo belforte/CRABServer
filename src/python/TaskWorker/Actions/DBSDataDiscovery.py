@@ -585,6 +585,10 @@ if __name__ == '__main__':
 
     dbsInstance = sys.argv[1]
     dbsDataset = sys.argv[2]
+    blockList = []
+    if '#' in dbsDataset:  # accep a block name as input
+        blockList = [dbsDataset]
+        dbsDataset = dbsDataset.split('#')[0]
     dbsSecondaryDataset = sys.argv[3] if len(sys.argv) == 4 else None  # pylint: disable=invalid-name
     DBSUrl = f"https://cmsweb.cern.ch/dbs/{dbsInstance}/DBSReader/"
 
@@ -621,7 +625,7 @@ if __name__ == '__main__':
 
     fileset = DBSDataDiscovery(config=config, rucioClient=rucioClient)
     userConfig = {'partialdataset':False,
-                  'inputblocks':[]
+                  'inputblocks':blockList
                   }
     discoveryOutput = (
         fileset.execute(task={'tm_nonvalid_input_dataset': 'T', 'tm_use_parent': 0, 'user_proxy': 'None',

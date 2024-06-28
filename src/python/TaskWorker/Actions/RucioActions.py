@@ -195,7 +195,7 @@ class RucioAction():
 
         # prepare container to be recalled
         if isinstance(dataToRecall, str):
-            # recalling a full DBS dataset, simple the container already exists
+            # recalling a full DBS dataset. Simple: the container already exists
             myScope = 'cms'
             dbsDatasetName = dataToRecall
             containerDid = {'scope': myScope, 'name': dbsDatasetName}
@@ -225,8 +225,8 @@ class RucioAction():
         lifetime = (MAX_DAYS_FOR_TAPERECALL + 7) * 24 * 60 * 60  # in seconds
         ruleId = self.createOrReuseRucioRule(did=containerDid, grouping=grouping,
                                              rseExpression=rseExpression,
-                                             #activity="Analysis Tape Recall",
-                                             activity="Analysis Input",
+                                             activity="Analysis Tape Recall",
+                                             #activity="Analysis Input",
                                              comment=comment, lifetime=lifetime)
         msg = f"Created Rucio rule ID: {ruleId}"
         self.logger.info(msg)

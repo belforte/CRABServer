@@ -67,7 +67,7 @@ class RucioAction():
         # rseExpression = 'T3_IT_Trieste' # for testing
         weight = 'ddm_quota'  # only makes sense for rules which trigger replicas
         # weight = None # for testing
-        if activity == "Analysis Tape Recall":
+        if activity == "Analysis TapeRecall":
             askApproval = True
             account = self.username
         else:
@@ -225,7 +225,7 @@ class RucioAction():
         lifetime = (MAX_DAYS_FOR_TAPERECALL + 7) * 24 * 60 * 60  # in seconds
         ruleId = self.createOrReuseRucioRule(did=containerDid, grouping=grouping,
                                              rseExpression=rseExpression,
-                                             activity="Analysis Tape Recall",
+                                             activity="Analysis TapeRecall",
                                              #activity="Analysis Input",
                                              comment=comment, lifetime=lifetime)
         msg = f"Created Rucio rule ID: {ruleId}"

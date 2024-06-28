@@ -2,7 +2,7 @@ import os
 import re
 
 from TaskWorker.Actions.TaskAction import TaskAction
-from TaskWorker.WorkerExceptions import TaskWorkerException
+from TaskWorker.WorkerExceptions import TaskWorkerException, SubmissionRefusedException
 from ServerUtilities import isFailurePermanent
 from ServerUtilities import getCheckWriteCommand, createDummyFile
 from ServerUtilities import removeDummyFile, execute_command, isEnoughRucioQuota, getRucioAccountFromLFN
@@ -38,7 +38,7 @@ class StageoutCheck(TaskAction):
                 msg += "\n" + out
                 msg += "\n" + err
                 self.logger.warning(msg)
-                raise TaskWorkerException(msg)
+                raise SubmissionRefusedException(msg)
             else:
                 # Unknown error. Operators should check it from time to time and add failures if they are permanent.
                 self.logger.warning("CRAB3 was not able to identify if failure is permanent. Err: %s Out: %s ExitCode: %s", err, out, exitcode)

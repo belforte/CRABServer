@@ -18,7 +18,8 @@ if sys.version_info < (3, 0):
 from RESTInteractions import CRABRest
 from TaskWorker.DataObjects.Result import Result
 from ServerUtilities import truncateError, executeCommand, FEEDBACKMAIL
-from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException, ChildUnexpectedExitException, ChildTimeoutException
+from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetException,\
+    ChildUnexpectedExitException, ChildTimeoutException, SubmissionRefusedException
 from TaskWorker.ChildWorker import startChildWorker
 
 

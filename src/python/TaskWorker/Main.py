@@ -70,6 +70,10 @@ def main():
     if not status_:
         raise ConfigException(msg_)
 
+    if getattr(configuration.TaskWorker, 'useHTCv2', None):
+        os.environ['useHtcV2'] = 'True'
+        print("Will use HTC python bindings V2")
+
     if options.pdb:
         # override root loglevel to debug
         logging.getLogger().setLevel(logging.DEBUG)

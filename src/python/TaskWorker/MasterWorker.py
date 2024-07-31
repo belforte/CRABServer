@@ -212,8 +212,7 @@ class MasterWorker(object):
         self.dbInstance = dbInstance
         self.logger.info('Will connect via URL: https://%s/%s', self.restHost, self.dbInstance)
 
-        if getattr(self.config.TaskWorker, 'useHTCv2', None):
-            os.environ['useHtcV2'] = 'True'
+        if 'useHtcV2' in os.environ:
             self.logger.info("Will use HTC python bindings V2")
 
         #Let's increase the server's retries for recoverable errors in the MasterWorker

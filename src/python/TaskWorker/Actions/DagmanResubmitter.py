@@ -1,10 +1,9 @@
 """ Resubmit failed jobs in tasks """
 
-from http.client import HTTPException
-import sys
+import os
 
-import classad2 as classad
-import htcondor2 as htcondor
+from http.client import HTTPException
+from urllib.parse import urlencode
 
 import HTCondorLocator
 
@@ -14,10 +13,12 @@ from TaskWorker.Actions.DagmanSubmitter import checkMemoryWalltime
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from TaskWorker.DataObjects import  Result
 
-if sys.version_info >= (3, 0):
-    from urllib.parse import urlencode  # pylint: disable=no-name-in-module
-if sys.version_info < (3, 0):
-    from urllib import urlencode
+if 'useHtcV2' in os.environ():
+    import htcondor2 as htcondor
+    import classad2 as classad
+else:
+    import htcondor
+    import classad
 
 
 class DagmanResubmitter(TaskAction):

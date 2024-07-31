@@ -212,6 +212,10 @@ class MasterWorker(object):
         self.dbInstance = dbInstance
         self.logger.info('Will connect via URL: https://%s/%s', self.restHost, self.dbInstance)
 
+        if getattr(self.config.TaskWorker, 'useHTCv2', None):
+            os.environ['useHtcV2'] = 'True'
+            self.logger.info("Will use HTC python bindings V2")
+
         #Let's increase the server's retries for recoverable errors in the MasterWorker
         #60 means we'll keep retrying for 1 hour basically (we retry at 20*NUMRETRY seconds, so at: 20s, 60s, 120s, 200s, 300s ...)
         self.crabserver = CRABRest(self.restHost, self.config.TaskWorker.cmscert, self.config.TaskWorker.cmskey, retry=20,

@@ -1,11 +1,15 @@
 """ used by TaskWorker to decide which scheduler to submit to """
+import os
 import time
 import bisect
 import random
 
-import classad2 as classad
-import htcondor2 as htcondor
-
+if 'useHtcV2' in os.environ():
+    import htcondor2 as htcondor
+    import classad2 as classad
+else:
+    import htcondor
+    import classad
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
 def weightedChoice(choices):

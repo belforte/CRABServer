@@ -6,12 +6,9 @@ Submit a DAG directory created by the DagmanCreator component.
 import os
 import copy
 import time
-import sys
 
 from http.client import HTTPException
-
-import classad2 as classad
-import htcondor2 as htcondor
+from urllib.parse import urlencode
 
 import CMSGroupMapper
 import HTCondorLocator
@@ -24,11 +21,12 @@ from TaskWorker.DataObjects import Result
 from TaskWorker.Actions import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException, SubmissionRefusedException
 
-if sys.version_info >= (3, 0):
-    from urllib.parse import urlencode  # pylint: disable=no-name-in-module
-if sys.version_info < (3, 0):
-    from urllib import urlencode
-
+if 'useHtcV2' in os.environ():
+    import htcondor2 as htcondor
+    import classad2 as classad
+else:
+    import htcondor
+    import classad
 
 ## These are the CRAB attributes that we want to add to the job class ad when
 ## using the submitDirect() method.
@@ -542,7 +540,11 @@ class DagmanSubmitter(TaskAction.TaskAction):
             submitResult = schedd.submit(description=jobJDL, count=1, spool=True)
             clusterId = submitResult.cluster()
             numProcs = submitResult.num_procs()
-            schedd.spool(submitResult)
+            if 'useHtcV2' in os.environ():
+                schedd.spool(submitResult)
+            else:
+                myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)
+                schedd.spool(list(myjobs))
         except Exception as hte:
             raise TaskWorkerException(f"Submission failed with:\n{hte}") from hte
 

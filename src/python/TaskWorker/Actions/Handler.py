@@ -29,7 +29,7 @@ from TaskWorker.WorkerExceptions import WorkerHandlerException, TapeDatasetExcep
 from CRABUtils.TaskUtils import updateTaskStatus, uploadWarning
 from ServerUtilities import uploadToS3
 
-if 'useHtcV2' in os.environ:
+if os.path.isfile('useHtcV2'):
     import htcondor2 as htcondor
 else:
     import htcondor

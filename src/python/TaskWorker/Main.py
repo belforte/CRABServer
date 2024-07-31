@@ -71,8 +71,14 @@ def main():
         raise ConfigException(msg_)
 
     if getattr(configuration.TaskWorker, 'useHTCv2', None):
-        os.environ['useHtcV2'] = 'True'
+        open('useHtcV2', 'w', encoding='utf-8').close()
         print("Will use HTC python bindings V2")
+    else:
+        try:
+            os.remove('useHtcV2')
+        except FileNotFoundError:
+            pass
+        print("Will use HTC python bindings V1")
 
     if options.pdb:
         # override root loglevel to debug

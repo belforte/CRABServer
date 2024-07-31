@@ -21,7 +21,7 @@ from TaskWorker.DataObjects import Result
 from TaskWorker.Actions import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException, SubmissionRefusedException
 
-if 'useHtcV2' in os.environ:
+if os.path.isfile('useHtcV2'):
     import htcondor2 as htcondor
     import classad2 as classad
 else:
@@ -540,7 +540,7 @@ class DagmanSubmitter(TaskAction.TaskAction):
             submitResult = schedd.submit(description=jobJDL, count=1, spool=True)
             clusterId = submitResult.cluster()
             numProcs = submitResult.num_procs()
-            if 'useHtcV2' in os.environ:
+            if os.path.isfile('useHtcV2'):
                 schedd.spool(submitResult)
             else:
                 myjobs = jobJDL.jobs(count=numProcs, clusterid=clusterId)

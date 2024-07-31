@@ -4,7 +4,7 @@ import time
 import bisect
 import random
 
-if 'useHtcV2' in os.environ:
+if os.path.isfile('useHtcV2'):
     import htcondor2 as htcondor
     import classad2 as classad
 else:

@@ -10,7 +10,7 @@ from TaskWorker.DataObjects import Result
 from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.WorkerExceptions import TaskWorkerException
 
-if 'useHtcV2' in os.environ():
+if 'useHtcV2' in os.environ:
     import htcondor2 as htcondor
     import classad2 as classad
 else:

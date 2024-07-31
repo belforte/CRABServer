@@ -13,7 +13,7 @@ from TaskWorker.Actions.DagmanSubmitter import checkMemoryWalltime
 from TaskWorker.WorkerExceptions import TaskWorkerException
 from TaskWorker.DataObjects import  Result
 
-if 'useHtcV2' in os.environ():
+if 'useHtcV2' in os.environ:
     import htcondor2 as htcondor
     import classad2 as classad
 else:

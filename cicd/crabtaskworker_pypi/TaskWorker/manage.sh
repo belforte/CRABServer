@@ -31,18 +31,6 @@ APP_PATH="${APP_PATH:-/data/srv/current/lib/python/site-packages/}"
 # Hardcoded the path and use new_updateTMRuntime.sh to build it from source and copy to this path.
 export CRABTASKWORKER_ROOT="${APP_PATH}"
 
-# use v1 or v2 HTC python bindings
-HtcV=`./useHTCbindingsV1orV2.py $CONFIG`
-case $HtcV in
-  V1 )
-    unset useHtcV2
-    echo "Will use HTC bindings V1"
-    ;;
-  V2 )
-    export useHtcV2='True'
-    echo "Will use HTC bindings V2"
-    ;;
-esac
 
 helpFunction() {
     grep "^##H" "${0}" | sed -r "s/##H(| )//g"
@@ -56,6 +44,20 @@ _getMasterWorkerPid() {
 start_srv() {
     # Check require env
     export PYTHONPATH
+
+    # use v1 or v2 HTC python bindings (this is only needed for start).
+    HtcV=`./useHTCbindingsV1orV2.py $CONFIG`
+    case $HtcV in
+      V1 )
+        unset useHtcV2
+        echo "Will use HTC bindings V1"
+        ;;
+      V2 )
+        export useHtcV2='True'
+        echo "Will use HTC bindings V2"
+        ;;
+    esac
+
     echo "Starting TaskWorker..."
     if [[ $DEBUG ]]; then
         crab-taskworker --config "${CONFIG}" --logDebug --pdb

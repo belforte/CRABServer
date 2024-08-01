@@ -10,7 +10,7 @@ config = loadConfigurationFile(os.path.abspath(configFile))
 
 if getattr(config.TaskWorker, 'useHtcV2', None):
     os.environ['useHtcV2'] = 'True'
-    print("Will use HTCondor bindings V2")
+    print("V2")
 else:
     os.environ.pop('useHtcV2', None)
-    print("Will use HTCondor bindings V1")
+    print("V1")

@@ -142,7 +142,6 @@ class DagmanResubmitter(TaskAction):
         return Result.Result(task=kwargs['task'], result='OK')
 
 if __name__ == "__main__":
-    import os
     import logging
     from RESTInteractions import CRABRest
     from WMCore.Configuration import Configuration

@@ -6,7 +6,7 @@ import sys
 
 from WMCore.Configuration import loadConfigurationFile
 from TaskWorker.WorkerExceptions import ConfigException
-from TaskWorker.MasterWorker import MasterWorker
+#from TaskWorker.MasterWorker import MasterWorker
 import HTCondorLocator
 
 def validateConfig(config):
@@ -80,6 +80,13 @@ def main():
         if not hasattr(configuration, 'FeatureFlags'):
             configuration.section_('FeatureFlags')
             configuration.FeatureFlags.childWorker = False
+        if getattr(configuration.TaskWorker, 'useHtcV2', None):
+            os.environ['useHtcV2'] = 'True'
+            print("Using HTTC Bindings V2")
+        else:
+            os.environ.pop('useHtcV2', None)
+            print("Using HTTC Bindings V1")
+        from TaskWorker.MasterWorker import MasterWorker  # pylint: disable=import-outside-toplevel
         # start with pdb
         import pdb #pylint: disable=import-outside-toplevel
         pdb.set_trace() #pylint: disable=forgotten-debug-statement

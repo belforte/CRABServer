@@ -16,8 +16,10 @@ from datetime import datetime
 from pprint import pformat
 from distutils.util import strtobool
 
-import htcondor2 as htcondor
-import classad2 as classad
+#import htcondor2 as htcondor
+#import classad2 as classad
+import htcondor
+import classad
 
 
 class GwmsmonAlarm():

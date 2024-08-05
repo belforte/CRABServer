@@ -44,19 +44,19 @@ _getMasterWorkerPid() {
 start_srv() {
     # Check require env
     export PYTHONPATH
-
-    # use v1 or v2 HTC python bindings (this is only needed for start).
-    HtcV=`./useHTCbindingsV1orV2.py $CONFIG`
-    case $HtcV in
-      V1 )
-        unset useHtcV2
-        echo "Will use HTC bindings V1"
-        ;;
-      V2 )
-        export useHtcV2='True'
-        echo "Will use HTC bindings V2"
-        ;;
-    esac
+#
+#    # use v1 or v2 HTC python bindings (this is only needed for start).
+#    HtcV=`./useHTCbindingsV1orV2.py $CONFIG`
+#    case $HtcV in
+#      V1 )
+#        unset useHtcV2
+#        echo "Will use HTC bindings V1"
+#        ;;
+#      V2 )
+#        export useHtcV2='True'
+#        echo "Will use HTC bindings V2"
+#        ;;
+#    esac
 
     echo "Starting TaskWorker..."
     if [[ $DEBUG ]]; then

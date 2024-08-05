@@ -160,8 +160,8 @@ class Overflow:
         routerEntry["set_DESIRED_SITES"] = newSiteList
         routerEntry["set_DESIRED_SITES_Orig"] = self.currSiteList
         routerEntry["set_DESIRED_SITES_Diff"] = self.currSiteListDiff
-        routerEntry["set_HasBeenOverflowRouted"] = True;
-        routerEntry["set_RouteType"] = "overflow";
+        routerEntry["set_HasBeenOverflowRouted"] = True
+        routerEntry["set_RouteType"] = "overflow"
         routerEntry["eval_set_LastRouted"] = classad.ExprTree('time()')
 
         logging.info("A new Route has been added:  %s", routerEntry)

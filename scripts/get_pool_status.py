@@ -53,7 +53,7 @@ class PoolStatus(object):
             factory_info["GlideFactoryName", entry["GLIDEIN_CMSSite"]] = entry.get("GlideFactoryMonitorStatusIdle", 0)
 
         for entry, idle in factory_info.items():
-            name, site = entry
+            name, site = entry  # pylint: disable=unused-variable
             site_info = self.pool_status.setdefault(site, {})
             cur = site_info.setdefault("IdleGlideins", 0)
             site_info["IdleGlideins"] = cur + int(idle)

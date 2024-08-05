@@ -526,7 +526,8 @@ class DagmanSubmitter(TaskAction.TaskAction):
         # make sure that there is no "queue" statement in subdagJDL "jdl fragment" (introduced in v2 HTC bindings)
         # since condor_submit_dag will add one anyhow
         subdag = str(subdagJDL)  # print subdagJDL into a string
-        subdag = subdag.rstrip('queue\n')  # strip "queue" from last line
+        # strip "queue" from last line
+        subdag = subdag.rstrip('queue\n')  # pylint: disable=bad-str-strip-call
         # save to the file
         with open('subdag.jdl', 'w', encoding='utf-8') as fd:
             print(subdag, file=fd)

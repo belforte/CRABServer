@@ -7,19 +7,11 @@ import os
 import shutil
 import sys
 import time
-import signal
 import logging
 
 from http.client import HTTPException
+from urllib.parse import urlencode
 from MultiProcessingLog import MultiProcessingLog
-
-if sys.version_info >= (3, 0):
-    from urllib.parse import urlencode  # pylint: disable=no-name-in-module
-if sys.version_info < (3, 0):
-    from urllib import urlencode
-
-#WMcore dependencies
-from WMCore.Configuration import loadConfigurationFile
 
 #CRAB dependencies
 from RESTInteractions import CRABRest
@@ -54,9 +46,9 @@ def getRESTParams(config, logger):
 
     try:
         instance = config.TaskWorker.instance
-    except:
+    except Exception as e:
         msg = "No instance provided: need to specify config.TaskWorker.instance in the configuration"
-        raise ConfigException(msg)
+        raise ConfigException(msg) from e
 
     if instance in SERVICE_INSTANCES:
         logger.info('Will connect to CRAB service: %s', instance)
@@ -70,9 +62,9 @@ def getRESTParams(config, logger):
         try:
             restHost = config.TaskWorker.restHost
             dbInstance = config.TaskWorker.dbInstance
-        except:
+        except Exception as e:
             msg = "Need to specify config.TaskWorker.restHost and dbInstance in the configuration"
-            raise ConfigException(msg)
+            raise ConfigException(msg) from e
     return restHost, dbInstance
 
 

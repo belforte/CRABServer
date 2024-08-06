@@ -70,6 +70,8 @@ def main():
     if not status_:
         raise ConfigException(msg_)
 
+    # must set userHtcV2 in the environment before importing TaskWorker
+    # so that in all files we can use it to decide if to import htcondor or htcondor2
     if getattr(configuration.TaskWorker, 'useHtcV2', None):
         os.environ['useHtcV2'] = 'True'
         print("Using HTTC Bindings V2")

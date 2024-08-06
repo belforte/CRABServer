@@ -206,6 +206,8 @@ class MasterWorker(object):
 
         if 'useHtcV2' in os.environ:
             self.logger.info("Will use HTC python bindings V2")
+        else:
+            self.logger.info("Will use HTC python bindings V1")
 
         #Let's increase the server's retries for recoverable errors in the MasterWorker
         #60 means we'll keep retrying for 1 hour basically (we retry at 20*NUMRETRY seconds, so at: 20s, 60s, 120s, 200s, 300s ...)

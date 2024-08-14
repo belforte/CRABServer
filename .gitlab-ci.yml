@@ -106,6 +106,7 @@ build_monit_image:
   rules:
     - if: $SUBMIT_STATUS_TRACKING
       when: never
+    - !reference [.default_rules, default]
     - !reference [.default_rules, release]
   stage: build_docker
   needs: ["build_tw_image"]

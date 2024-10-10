@@ -47,6 +47,7 @@ FILE_MEMORY_LIMIT = 512 * 1024
 SERVICE_INSTANCES = {'prod': {'restHost': 'cmsweb.cern.ch', 'dbInstance': 'prod'},
                      'preprod': {'restHost': 'cmsweb-testbed.cern.ch', 'dbInstance': 'preprod'},
                      'auth': {'restHost': 'cmsweb-auth.cern.ch', 'dbInstance': 'preprod'},
+                     # Vijay's tmp env
                      'test1': {'restHost': 'cmsweb-test1.cern.ch', 'dbInstance': 'devfour'},
                      'test2': {'restHost': 'cmsweb-test2.cern.ch', 'dbInstance': 'dev'},
                      'test3': {'restHost': 'cmsweb-test3.cern.ch', 'dbInstance': 'dev'},
@@ -55,7 +56,7 @@ SERVICE_INSTANCES = {'prod': {'restHost': 'cmsweb.cern.ch', 'dbInstance': 'prod'
                      'test6': {'restHost': 'cmsweb-test6.cern.ch', 'dbInstance': 'dev'},
                      'test11': {'restHost': 'cmsweb-test11.cern.ch', 'dbInstance': 'devtwo'},
                      'test12': {'restHost': 'cmsweb-test12.cern.ch', 'dbInstance': 'devthree'},
-                     'test14': {'restHost': 'cmsweb-test14.cern.ch', 'dbInstance': 'devfour'},
+                     'test14': {'restHost': 'cmsweb-test14.cern.ch', 'dbInstance': 'tseethon'},
                      'stefanovm': {'restHost': 'stefanovm.cern.ch', 'dbInstance': 'dev'},
                      'stefanovm2': {'restHost': 'stefanovm2.cern.ch', 'dbInstance': 'dev'},
                      'other': {'restHost': None, 'dbInstance': None},
@@ -91,7 +92,7 @@ MAX_DAYS_FOR_TAPERECALL = 15
 MAX_TB_TO_RECALL_AT_A_SINGLE_SITE = 1000  # effectively no limit. See https://github.com/dmwm/CRABServer/issues/7610
 
 # These are all possible statuses of a task in the TaskDB.
-TASKDBSTATUSES_TMP = ['WAITING', 'NEW', 'HOLDING', 'QUEUED', 'TAPERECALL', 'KILLRECALL']
+TASKDBSTATUSES_TMP = ['NEW', 'HOLDING', 'QUEUED', 'TAPERECALL', 'KILLRECALL']
 TASKDBSTATUSES_FAILURES = ['SUBMITFAILED', 'KILLFAILED', 'RESUBMITFAILED', 'FAILED']
 TASKDBSTATUSES_FINAL = ['UPLOADED', 'SUBMITTED', 'KILLED'] + TASKDBSTATUSES_FAILURES
 TASKDBSTATUSES = TASKDBSTATUSES_TMP + TASKDBSTATUSES_FINAL
@@ -198,7 +199,7 @@ STAGEOUT_ERRORS = {60317: [{"regex": ".*Cancelled ASO transfer after timeout.*",
                           ]}
 
 
-def NEW_USER_SANDBOX_EXCLUSIONS(tarmembers):  # This is only used in CRABClient !!! MOVE IT THERE
+def NEW_USER_SANDBOX_EXCLUSIONS(tarmembers):  # TODO move to CRABClient !!!
     """ Exclusion function used with the new crabclient (>= 3.3.1607). Since the new client sandbox no longer
         contains the debug files, it's pointless to exclude them. Also, this function is used when getting
         the hash of the debug tarball (a new addition in 3.3.1607). If the debug files are excluded, the tarball
@@ -424,6 +425,35 @@ def isFailurePermanent(reason, gridJob=False):
     return False, "", None
 
 
+def parseJobAd(filename):
+    """ Parse the jobad file provided as argument and return a dict representing it
+        SB: why do we have this ? the classAd object returned by classad.parse has
+            the semantic of a dictionary ! Maybe simply in order to use it inside cmscp.py
+            and in job wrapper we are not sure to have HTCondor available ?
+            Note that we also have a parseAd() method inside CMSRunAnalysis.py which should
+            do finely also in cmscp.py
+            As a start I will remove reference to classAd in here (was commented anyhow) and
+            avoid using is when we can import classad
+    """
+    jobAd = {}
+    with open(filename, 'r', encoding='utf-8') as fd:
+        for adline in fd.readlines():
+            info = adline.split(' = ', 1)
+            if len(info) != 2:
+                continue
+            if info[1].startswith('undefined'):
+                val = info[1].strip()
+            elif info[1].startswith('"'):
+                val = info[1].strip().replace('"', '')
+            else:
+                try:
+                    val = int(info[1].strip())
+                except ValueError:
+                    continue
+            jobAd[info[0]] = val
+    return jobAd
+
+
 def mostCommon(lst, default=0):
     """ Return the most common error among the list
     """
@@ -484,7 +514,7 @@ def getTimeFromTaskname(taskname):
     return calendar.timegm(dtime)
 
 
-# Remove this from CRABClient ? This is kind of common for WMCore not only for CRAB. Maybe better place to have this in WMCore?
+# TODO: Remove this from CRABClient. This is kind of common for WMCore not only for CRAB. Maybe better place to have this in WMCore?
 def encodeRequest(configreq, listParams=None):
     """ Used to encode the request from a dict to a string. Include the code needed for transforming lists in the format required by
         cmsweb, e.g.:   adduserfiles = ['file1','file2']  ===>  [...]adduserfiles=file1&adduserfiles=file2[...]
@@ -721,6 +751,40 @@ def downloadFromS3(crabserver=None, filepath=None, objecttype=None, taskname=Non
                                         tarballname=tarballname, logger=logger)
     downloadFromS3ViaPSU(filepath=filepath, preSignedUrl=preSignedUrl, logger=logger)
 
+def checkS3Object(crabserver=None, objecttype=None, username=None, tarballname=None,
+                 logger=None):
+    """
+    Check if file exist in S3.
+
+    :param crabserver: CRABRest object, points to CRAB Server to use
+    :type crabserver: RESTInteractions.CRABRest
+    :param objecttype: the kind of object to dowbload: clientlog|twlog|sandbox|debugfiles|runtimefiles
+    :type objecttype: str
+    :param username: the username this sandbox belongs to, in case objecttype=sandbox
+    :type username: str
+    :param tarballname: for sandbox, taskname is not used but tarballname is needed
+    :type tarballname: str
+
+    :return: None, but raise exception if wget is exit with non-zero.
+    """
+    preSignedUrl = getDownloadUrlFromS3(crabserver=crabserver, objecttype=objecttype,
+                                        username=username, tarballname=tarballname,
+                                        clientmethod='head_object',
+                                        logger=logger)
+    downloadCommand = ''
+    if os.getenv('CRAB_useGoCurl'):
+        raise NotImplementedError('HEAD with gocurl is not implemented')
+    downloadCommand += ' wget -Sq -O /dev/null --method=HEAD'
+    downloadCommand += ' "%s"' % preSignedUrl
+
+    with subprocess.Popen(downloadCommand, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True) as downloadProcess:
+        logger.debug("Will execute:\n%s", downloadCommand)
+        stdout, stderr = downloadProcess.communicate()
+        exitcode = downloadProcess.returncode
+        logger.debug('exitcode: %s\nstdout: %s', exitcode, stdout)
+
+    if exitcode != 0:
+        raise Exception('Download command %s failed. stderr is:\n%s' % (downloadCommand, stderr))
 
 def retrieveFromS3(crabserver=None, objecttype=None, taskname=None,
                    username=None, tarballname=None, logger=None):
@@ -798,7 +862,8 @@ def uploadToS3(crabserver=None, filepath=None, objecttype=None, taskname=None,
 
 
 def getDownloadUrlFromS3(crabserver=None, objecttype=None, taskname=None,
-                         username=None, tarballname=None, logger=None):
+                         username=None, tarballname=None, clientmethod=None,
+                         logger=None):
     """
     obtains a PreSigned URL to access an existing object in S3
     :param crabserver: a RESTInteraction/CRABRest object : points to CRAB Server to use
@@ -816,6 +881,8 @@ def getDownloadUrlFromS3(crabserver=None, objecttype=None, taskname=None,
         dataDict['username'] = username
     if tarballname:
         dataDict['tarballname'] = tarballname
+    if clientmethod:
+        dataDict['clientmethod'] = clientmethod
     data = encodeRequest(dataDict)
     try:
         # calls to restServer alway return a 3-ple ({'result':a-list}, HTTPcode, HTTPreason)

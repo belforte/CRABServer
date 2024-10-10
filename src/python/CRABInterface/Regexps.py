@@ -16,8 +16,8 @@ RX_ANYTHING_10K = re.compile(r"^.{0,10000}$")
 #       (this probably requires to adapt something on Lexicon)
 pNameRE      = r"(?=.{0,400}$)[a-zA-Z0-9\-_.]+"
 lfnParts.update( {'publishname' : pNameRE,
-                  'psethash'    : '[a-f0-9]+',
-                  'filename'    : '[a-zA-Z0-9\-_\.]'}
+                  'psethash'    : r'[a-f0-9]+',
+                  'filename'    : r'[a-zA-Z0-9\-_\.]'}
 )
 ## Although the taskname column in the TaskDB accepts tasknames of up to 255
 ## characters, we limit the taskname to something less than that in order to

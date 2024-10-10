@@ -91,7 +91,7 @@ class RESTCache(RESTEntity):
         self.s3_client = boto3.client('s3', endpoint_url=endpoint, aws_access_key_id=access_key,
                                       aws_secret_access_key=secret_key)
 
-    def validate(self, apiobj, method, api, param, safe):
+    def validate(self, apiobj, method, api, param, safe):  # pylint: disable=unused-argument
         """Validating all the input parameter as enforced by the WMCore.REST module"""
         authz_login_valid()
         if method in ['GET']:
@@ -192,7 +192,7 @@ class RESTCache(RESTEntity):
                     self.s3_client.download_file(self.s3_bucket, s3_objectKey, tempFile)
             except ClientError as e:
                 raise ExecutionError(f"Connection to s3.cern.ch failed:\n{str(e)}") from e
-            with open(tempFile) as f:
+            with open(tempFile, 'r', encoding='utf-8') as f:
                 txt = f.read()
             os.remove(tempFile)
             return txt

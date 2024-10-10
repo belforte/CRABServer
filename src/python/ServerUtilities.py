@@ -725,6 +725,7 @@ class tempSetLogLevel():
 #  downloadFromS3        to retrieve an object into a file
 #  retrieveFromS3        to retrieve an object as JSON to use in the code
 #  uploadToS3            to upload a file into an S3 object
+#  checkS3Object         to check if an object is present in S3
 #  getDownloadUrlFromS3  to obtain a PreSigned URL to access an existing object in S3
 #    this can be used e.g. to share access to logs
 # Common signature is: (crabserver, filepath, objecttype, taskname, username, tarballname, logger)
@@ -858,6 +859,23 @@ def uploadToS3(crabserver=None, filepath=None, objecttype=None, taskname=None,
         uploadToS3ViaPSU(filepath=filepath, preSignedUrlFields=preSignedUrl, logger=logger)
     except Exception as e:
         raise Exception('Upload to S3 failed\n%s' % str(e))
+    logger.debug('upload to S3 of %s %s completed', objecttype, filepath)
+    logger.debug('make sure that object is ready for retrieve')  # for large files it may take up to minutes
+    waitTime = 0.
+    waitStep = 1  # seconds
+    while True:
+        time.sleep(waitStep)
+        waitTime += waitStep / 60.  # minutes
+        try:
+            checkS3Object(crabserver=crabserver, objecttype=objecttype,
+                      username=username, tarballname=tarballname, logger=logger)
+        except Exception:
+            if waitTime > 10 :
+                raise Exception("Object not available in S3 after 10 minutes. Something badly wrong")
+            watStep = 2 * waitStep
+            logger.debug('not ready yet, wait another %s seconds', waitStep)
+            continue
+        break
     logger.debug('%s %s successfully uploaded to S3', objecttype, filepath)
 
 

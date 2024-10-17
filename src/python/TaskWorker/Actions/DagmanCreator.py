@@ -17,7 +17,7 @@ import tempfile
 from ast import literal_eval
 
 from ServerUtilities import MAX_DISK_SPACE, MAX_IDLE_JOBS, MAX_POST_JOBS, TASKLIFETIME
-from ServerUtilities import getLock, downloadFromS3
+from ServerUtilities import getLock, downloadFromS3, checkS3Object, uploadToS3
 
 import TaskWorker.DataObjects.Result
 from TaskWorker.Actions.TaskAction import TaskAction
@@ -28,6 +28,7 @@ from CMSGroupMapper import get_egroup_users
 import WMCore.WMSpec.WMTask
 from WMCore.Services.CRIC.CRIC import CRIC
 from WMCore.WMRuntime.Tools.Scram import ARCH_TO_OS, SCRAM_TO_ARCH
+from bin.vaildateCMSSWMergeVersion import taskName
 
 if 'useHtcV2' in os.environ:
     import classad2 as classad
@@ -544,8 +545,7 @@ class DagmanCreator(TaskAction):
             info['additional_environment_options'] += ' CRAB_TASKMANAGER_TARBALL=local'
         else:
             raise TaskWorkerException("Cannot find TaskManagerRun.tar.gz inside the cwd: %s" % os.getcwd())
-        if os.path.exists("sandbox.tar.gz"):
-            info['additional_input_file'] += ", sandbox.tar.gz"
+        info['additional_input_file'] += ", sandbox.tar.gz"  # it will be present on SPOOL_DIR after dab_bootstrap
         info['additional_input_file'] += ", run_and_lumis.tar.gz"
         info['additional_input_file'] += ", input_files.tar.gz"
         info['additional_input_file'] += ", submit_env.sh"
@@ -728,6 +728,11 @@ class DagmanCreator(TaskAction):
                 tf.add(ifname)
         finally:
             tf.close()
+        # also upload InputFiles.tar.gz to s3
+        task = kw['task']['tm_taskname']
+        uploadToS3(crabserver=self.crabserver, filepath='InputFiles.tar.gz',
+                   objecttype='runtimefiles', taskname=task,
+                   logger=self.logger)
 
     def createSubdag(self, splitterResult, **kwargs):
 
@@ -1197,19 +1202,15 @@ class DagmanCreator(TaskAction):
             username = kw['task']['tm_username']
             sandboxName = kw['task']['tm_user_sandbox']
             dbgFilesName = kw['task']['tm_debug_files']
+            self.logger.debug(f"Checking if sandbox file is available: {sandboxName}")
             try:
-                downloadFromS3(crabserver=self.crabserver, objecttype='sandbox', username=username,
-                               tarballname=sandboxName, filepath=sandboxTarBall, logger=self.logger)
+                checkS3Object(crabserver=self.crabserver, objecttype='sandbox', taskname=taskName,
+                              username=username, tarballname=sandboxName, logger=self.logger)
                 kw['task']['tm_user_sandbox'] = sandboxTarBall
             except Exception as ex:
-                raise TaskWorkerException("The CRAB server backend could not download the input sandbox with your code " + \
+                raise TaskWorkerException("The CRAB server backend could not find the input sandbox with your code " + \
                                   "from S3.\nThis could be a temporary glitch; please try to submit a new task later " + \
                                   "(resubmit will not work) and contact the experts if the error persists.\nError reason: %s" % str(ex)) from ex
-            try:
-                downloadFromS3(crabserver=self.crabserver, objecttype='sandbox', username=username,
-                               tarballname=dbgFilesName, filepath=debugTarBall, logger=self.logger)
-            except Exception as ex:   # pylint: disable=broad-except
-                self.logger.exception(ex)
 
         # Bootstrap the runtime if it is available.
         job_runtime = getLocation('CMSRunAnalysis.tar.gz', 'CRABServer/')
@@ -1227,8 +1228,6 @@ class DagmanCreator(TaskAction):
 
         self.extractMonitorFiles(inputFiles, **kw)
 
-        if kw['task'].get('tm_user_sandbox') == 'sandbox.tar.gz':
-            inputFiles.append('sandbox.tar.gz')
         if os.path.exists("CMSRunAnalysis.tar.gz"):
             inputFiles.append("CMSRunAnalysis.tar.gz")
         if os.path.exists("TaskManagerRun.tar.gz"):

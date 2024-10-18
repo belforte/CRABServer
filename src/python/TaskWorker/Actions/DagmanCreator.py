@@ -17,7 +17,7 @@ import tempfile
 from ast import literal_eval
 
 from ServerUtilities import MAX_DISK_SPACE, MAX_IDLE_JOBS, MAX_POST_JOBS, TASKLIFETIME
-from ServerUtilities import getLock, downloadFromS3, checkS3Object, uploadToS3
+from ServerUtilities import getLock, checkS3Object, uploadToS3
 
 import TaskWorker.DataObjects.Result
 from TaskWorker.Actions.TaskAction import TaskAction
@@ -28,7 +28,6 @@ from CMSGroupMapper import get_egroup_users
 import WMCore.WMSpec.WMTask
 from WMCore.Services.CRIC.CRIC import CRIC
 from WMCore.WMRuntime.Tools.Scram import ARCH_TO_OS, SCRAM_TO_ARCH
-from bin.vaildateCMSSWMergeVersion import taskName
 
 if 'useHtcV2' in os.environ:
     import classad2 as classad
@@ -1200,11 +1199,12 @@ class DagmanCreator(TaskAction):
         # Bootstrap the ISB if we are running in the TW
         if self.crabserver:
             username = kw['task']['tm_username']
+            taskname = kw['task']['tm_taskname']
             sandboxName = kw['task']['tm_user_sandbox']
             dbgFilesName = kw['task']['tm_debug_files']
             self.logger.debug(f"Checking if sandbox file is available: {sandboxName}")
             try:
-                checkS3Object(crabserver=self.crabserver, objecttype='sandbox', taskname=taskName,
+                checkS3Object(crabserver=self.crabserver, objecttype='sandbox', taskname=taskname,
                               username=username, tarballname=sandboxName, logger=self.logger)
                 kw['task']['tm_user_sandbox'] = sandboxTarBall
             except Exception as ex:

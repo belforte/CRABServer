@@ -400,7 +400,7 @@ def checkTaskInfo(taskDict, ad):
         printLog('Exiting AdjustSites because this dagman does not match task information in TASKS DB')
         sys.exit(3)
 
-def getSandbox(taskDict, crabserver):
+def getSandbox(taskDict, crabserver, logger):
     """
     Getting user sandbox (sandbox.tar.gz) from S3. It will not redownload
     sandbox if file exists.
@@ -410,15 +410,14 @@ def getSandbox(taskDict, crabserver):
     :type taskDict: dict
     :param crabserver: CRABRest object to talk with RESTCache API
     :type crabserver: RESTInteractions.CRABRest
+    :param logger: downloadFromS3 requires a logger !
+    :type logger: logging.logger object
     """
     sandboxTarBall = 'sandbox.tar.gz'
     sandboxTarBallTmp = sandboxTarBall + '_tmp'
     if os.path.exists(sandboxTarBall):
         printLog('sandbox.tar.gz already exist. Do nothing.')
         return
-
-    # init logger require by downloadFromS3
-    logger = setupStreamLogger()
 
     # get info
     username = getColumn(taskDict, 'tm_username')
@@ -435,7 +434,7 @@ def getSandbox(taskDict, crabserver):
                          "(resubmit will not work) and contact the experts if the error persists.\nError reason: %s", str(ex))
         sys.exit(4)
 
-def getDebugFiles(taskDict, crabserver):
+def getDebugFiles(taskDict, crabserver, logger):
     """
     Ops mon  (crabserver/ui) needs access to files from the debug_files.tar.gz
     Retrieve and expand debug_files.tar.gz from S3 in here for http access.
@@ -446,15 +445,13 @@ def getDebugFiles(taskDict, crabserver):
     :type taskDict: dict
     :param crabserver: CRABRest object to talk with RESTCache API
     :type crabserver: RESTInteractions.CRABRest
+    :param logger: downloadFromS3 requires a logger !
+    :type logger: logging.logger object
     """
     debugTarball = 'debug_files.tar.gz'
     if os.path.exists(debugTarball):
         printLog('sandbox.tar.gz already exist. Do nothing.')
         return
-
-
-    # init logger require by downloadFromS3
-    logger = setupStreamLogger()
 
     # get info
     username = getColumn(taskDict, 'tm_username')
@@ -525,9 +522,11 @@ def main():
 
     # check task status
     checkTaskInfo(taskDict=dictresult, ad=ad)
-    # get sandbox
-    getSandbox(taskDict=dictresult, crabserver=crabserver)
-    getDebugFiles(taskDict=dictresult, crabserver=crabserver)
+    # init logger required by downloadFromS3
+    logger = setupStreamLogger()
+    # get sandboxes
+    getSandbox(taskDict=dictresult, crabserver=crabserver, logger=logger)
+    getDebugFiles(taskDict=dictresult, crabserver=crabserver, logger=logger)
 
     # is this the first time this script runs for this task ? (it runs at each resubmit as well !)
     if not os.path.exists('WEB_DIR'):

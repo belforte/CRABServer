@@ -66,12 +66,12 @@ rm -f "${STARTDIR}/dummyFile"
 
 # Take the libraries from the build environment.
 pushd "${WMCORE_BUILD_PREFIX}"
-zip -r "${STARTDIR}/WMCore.zip" ./*
+zip -rq "${STARTDIR}/WMCore.zip" ./*
 zip -rq "${STARTDIR}/CRAB3.zip" WMCore PSetTweaks Utils -x \*.pyc || exit 3
 popd
 
 pushd "${CRABSERVER_BUILD_PREFIX}"
-zip -rq "${STARTDIR}/CRAB3.zip" RESTInteractions.py HTCondorLocator.py TaskWorker CRABInterface  TransferInterface ASO -x \*.pyc || exit 3
+zip -rq "${STARTDIR}/CRAB3.zip" ./* -x \*.pyc || exit 3
 popd
 
 cp -r "${CRABSERVERDIR}/scripts"/{TweakPSet.py,CMSRunAnalysis.py,task_process} .

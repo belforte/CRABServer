@@ -91,8 +91,18 @@ def addCRABInfoToJobJDL(jdl, info):
     from the info directory
     """
     for adName, dictName in SUBMIT_INFO:
-        if dictName in info and info[dictName] is not None:
+        if dictName in info and info[dictName]:
             jdl[adName] = str(info[dictName])
+    # CRAB_JobReleaseTimeout is passed in the config as an extraJDL, even if
+    # it is meant to be used in the PreJob which will look in the DAG ads
+    # so we need to add it to the DAG JDL as well
+    # Note: extraJDL config. param is a list,  DagmanCreator changes it to multiple lines
+    if 'extra_jdl' in info and info['extra_jdl']:
+        for ejdl in info['extra_jdl'].split('\n'):
+            adName, adVal = ejdl.lstrip('+').split('=', 1)
+            if adName == "CRAB_JobReleaseTimeout":
+                jdl[adName] = adVal
+
 
 class ScheddStats(dict):
     """ collect statistics of submission success/failure at various schedulers """
@@ -371,8 +381,6 @@ class DagmanSubmitter(TaskAction.TaskAction):
         """Internal execution to submit to selected scheduler
            Before submission it does duplicate check to see if
            task was not submitted by previous time"""
-        if not htcondor:
-            raise Exception("Unable to import HTCondor module")
 
         task = kwargs['task']
         workflow = task['tm_taskname']

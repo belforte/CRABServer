@@ -146,7 +146,6 @@ Error = job_err.$(CRAB_Id)
 Log = job_log
 # args changed...
 
-#Arguments = "-a $(CRAB_Archive) --sourceURL=$(CRAB_ISB) --jobNumber=$(CRAB_Id) --cmsswVersion=$(CRAB_JobSW) --scramArch=$(CRAB_JobArch) '--inputFile=$(inputFiles)' '--runAndLumis=$(runAndLumiMask)' --lheInputFiles=$(lheInputFiles) --firstEvent=$(firstEvent) --firstLumi=$(firstLumi) --lastEvent=$(lastEvent) --firstRun=$(firstRun) --seeding=$(seeding) --scriptExe=$(scriptExe) --eventsPerLumi=$(eventsPerLumi) --maxRuntime=$(maxRuntime) '--scriptArgs=$(scriptArgs)' -o $(CRAB_AdditionalOutputFiles)"
 Arguments = "--jobId=$(CRAB_Id)"
 
 transfer_input_files = CMSRunAnalysis.sh, cmscp.py%(additional_input_file)s
@@ -1206,18 +1205,14 @@ class DagmanCreator(TaskAction):
         params = {}
 
         # files to be transferred to remove WN's via Job.submit
-        filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh',
+        filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh', CMSRunAnalysis.tar.gz
                       'run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
         # files to be transferred to the scheduler by fDagmanSubmitter
         filesForSched = filesForWN + \
             ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'Job.submit', 'dag_bootstrap.sh',
-             'AdjustSites.py', 'site.ad.json',
+             'AdjustSites.py', 'site.ad.json', TaskManagerRun.tar.gz,
              'datadiscovery.pkl', 'taskinformation.pkl', 'taskworkerconfig.pkl',]
 
-        if os.path.exists("CMSRunAnalysis.tar.gz"):
-            filesForWN.append("CMSRunAnalysis.tar.gz")
-        if os.path.exists("TaskManagerRun.tar.gz"):
-            filesForSched.append("TaskManagerRun.tar.gz")
         if kw['task']['tm_input_dataset']:
             filesForSched.append("input_dataset_lumis.json")
             filesForSched.append("input_dataset_duplicate_lumis.json")

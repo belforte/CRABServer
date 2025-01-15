@@ -56,7 +56,7 @@ SCRIPT {prescriptDefer} PRE  Job{count} dag_bootstrap.sh PREJOB $RETRY {count} {
 SCRIPT DEFER 4 1800 POST Job{count} dag_bootstrap.sh POSTJOB $JOBID $RETURN $RETRY $MAX_RETRIES {taskname} {count} {tempDest} {outputDest} cmsRun_{count}.log.tar.gz {stage} {remoteOutputFiles}
 #PRE_SKIP Job{count} 3
 RETRY Job{count} {maxretries} UNLESS-EXIT 2
-VARS Job{count} count="{count}" runAndLumiMask="job_lumis_{count}.json" lheInputFiles="{lheInputFiles}" firstEvent="{firstEvent}" firstLumi="{firstLumi}" lastEvent="{lastEvent}" firstRun="{firstRun}" maxRuntime="{maxRuntime}" eventsPerLumi="{eventsPerLumi}" seeding="{seeding}" inputFiles="job_input_file_list_{count}.txt" scriptExe="{scriptExe}" scriptArgs="{scriptArgs}" +CRAB_localOutputFiles="\\"{localOutputFiles}\\"" +CRAB_DataBlock="\\"{block}\\"" +CRAB_Destination="\\"{destination}\\""
+VARS Job{count} count="{count}"
 ABORT-DAG-ON Job{count} 3
 """
 
@@ -1204,10 +1204,10 @@ class DagmanCreator(TaskAction):
         kw['task']['dbinstance'] = self.crabserver.getDbInstance()
         params = {}
 
-        # files to be transferred to remove WN's via Job.submit
+        # files to be transferred to remove WN's via Job.submit, could pack most in a tarball
         filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh', 'CMSRunAnalysis.tar.gz',
                       'run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
-        # files to be transferred to the scheduler by fDagmanSubmitter
+        # files to be transferred to the scheduler by fDagmanSubmitter (these will all be placed in InputFiles.tar.gz)
         filesForSched = filesForWN + \
             ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'Job.submit', 'dag_bootstrap.sh',
              'AdjustSites.py', 'site.ad.json', 'TaskManagerRun.tar.gz',

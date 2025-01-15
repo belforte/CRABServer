@@ -57,6 +57,9 @@ SCRIPT DEFER 4 1800 POST Job{count} dag_bootstrap.sh POSTJOB $JOBID $RETURN $RET
 #PRE_SKIP Job{count} 3
 RETRY Job{count} {maxretries} UNLESS-EXIT 2
 VARS Job{count} count="{count}"
+VARS My.CRAB_localOutputFiles="\\"{localOutputFiles}\\""
+VARS My.CRAB_DataBlock="\\"{block}\\""
+VARS My.CRAB_Destination="\\"{destination}\\""
 ABORT-DAG-ON Job{count} 3
 """
 

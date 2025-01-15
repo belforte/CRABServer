@@ -1110,7 +1110,7 @@ class DagmanCreator(TaskAction):
         info = self.makeJobSubmit(kwargs['task'])
 
         # list of input arguments needed for each jobs
-        argdicts = self.prepareJobArguments(dagSpecs, info, kw['task'])
+        argdicts = self.prepareJobArguments(dagSpecs, info, kwargs['task'])
         # save the input arguments to each job's CMSRunAnalysis.py in input_args.json file
         with open(argFileName, 'w', encoding='utf-8') as fd:
             json.dump(argdicts, fd)

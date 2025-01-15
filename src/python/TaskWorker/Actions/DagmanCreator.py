@@ -1205,12 +1205,12 @@ class DagmanCreator(TaskAction):
         params = {}
 
         # files to be transferred to remove WN's via Job.submit
-        filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh', CMSRunAnalysis.tar.gz
+        filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh', 'CMSRunAnalysis.tar.gz',
                       'run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
         # files to be transferred to the scheduler by fDagmanSubmitter
         filesForSched = filesForWN + \
             ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'Job.submit', 'dag_bootstrap.sh',
-             'AdjustSites.py', 'site.ad.json', TaskManagerRun.tar.gz,
+             'AdjustSites.py', 'site.ad.json', 'TaskManagerRun.tar.gz',
              'datadiscovery.pkl', 'taskinformation.pkl', 'taskworkerconfig.pkl',]
 
         if kw['task']['tm_input_dataset']:

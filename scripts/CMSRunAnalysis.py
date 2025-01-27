@@ -15,7 +15,6 @@ import logging
 import subprocess
 import traceback
 from xml.etree import ElementTree
-from ast import literal_eval
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError  # pylint: disable=deprecated-module
 
 from TweakPSet import prepareTweakingScript

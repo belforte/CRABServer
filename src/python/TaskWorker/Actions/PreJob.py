@@ -16,8 +16,6 @@ from ast import literal_eval
 from ServerUtilities import getWebdirForDb, insertJobIdSid
 from TaskWorker.Actions.RetryJob import JOB_RETURN_CODES
 
-import CMSGroupMapper
-
 if 'useHtcV2' in os.environ:
     import htcondor2 as htcondor
     import classad2 as classad

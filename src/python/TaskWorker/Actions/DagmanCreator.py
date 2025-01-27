@@ -209,7 +209,14 @@ class DagmanCreator(TaskAction):
         self.runningInTW = crabserver is not None
 
     def populateGlideinMatching(self, task):
-        """ actually simply set the required arch and microarch """
+        """ actually simply set the required arch and microarch
+            arguments:
+                task : dictionary : the standard task info from taskdb
+            returns:
+                matchinfo : dictionary : keys:
+                            required_arch (string)
+                            required_minimum_microarch (int)
+        """
         matchInfo = {}
         scram_arch = task['tm_job_arch']
         # required_arch, set default
@@ -227,9 +234,10 @@ class DagmanCreator(TaskAction):
 
         # required minimum micro_arch may need to be handled differently in the future (arm, risc, ...)
         # and may need different classAd(s) in the JDL, so try to be general here
+        # ref:  https://github.com/dmwm/WMCore/issues/12168#issuecomment-2539233761 and comments below
         min_micro_arch = task['tm_job_min_microarch']
         if not min_micro_arch:
-            matchInfo['required_minimum_microarch'] = '2'  # the current default for CMSSW
+            matchInfo['required_minimum_microarch'] = 2  # the current default for CMSSW
             return matchInfo
         if min_micro_arch == 'any':
             matchInfo['required_minimum_microarch'] = 0
@@ -238,7 +246,7 @@ class DagmanCreator(TaskAction):
             matchInfo['required_minimum_microarch'] = int(min_micro_arch.split('v')[-1])
             return matchInfo
         self.logger.error(f"Not supported microarch: {min_micro_arch}. Ignore it")
-        matchInfo['required_minimum_microarch'] = 'any'
+        matchInfo['required_minimum_microarch'] = 0
 
         return matchInfo
 
@@ -379,7 +387,7 @@ class DagmanCreator(TaskAction):
         # These attributes help gWMS decide what platforms this job can run on; see https://twiki.cern.ch/twiki/bin/view/CMSPublic/CompOpsMatchArchitecture
         matchInfo = self.populateGlideinMatching(task)
         jobSubmit['My.REQUIRED_ARCH'] = classad.quote(matchInfo['required_arch'])
-        jobSubmit['My.REQUIRED_MINIMUM_MICROARCH'] = classad.quote(matchInfo['required_minimum_microarch'])
+        jobSubmit['My.REQUIRED_MINIMUM_MICROARCH'] = str(matchInfo['required_minimum_microarch'])
         jobSubmit['My.DESIRED_CMSDataset'] = classad.quote(task['tm_input_dataset'])
 
         ## Add group information (local groups in SITECONF via CMSGroupMapper, VOMS groups via task info in DB)

@@ -390,6 +390,10 @@ class DagmanCreator(TaskAction):
         jobSubmit['My.REQUIRED_MINIMUM_MICROARCH'] = str(matchInfo['required_minimum_microarch'])
         jobSubmit['My.DESIRED_CMSDataset'] = classad.quote(task['tm_input_dataset'])
 
+        # extra requirements that user may set when submitting
+        jobSubmit['My.CRAB_RequestedMemory'] = str(task['tm_maxmemory'])
+        jobSubmit['My.CRAB_RequestedCores'] = str(task['tm_numcores'])
+        jobSubmit['My.MaxWallTimeMins'] = str(task['tm_maxjobruntime'])
         ## Add group information (local groups in SITECONF via CMSGroupMapper, VOMS groups via task info in DB)
         groups = set.union(map_user_to_groups(task['tm_username']), task['user_groups'])
         groups = ','.join(groups)  # from the set {'g1','g2'...,'gN'} to the string 'g1,g2,..gN'

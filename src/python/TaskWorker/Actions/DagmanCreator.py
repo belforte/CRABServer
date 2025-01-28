@@ -680,7 +680,7 @@ class DagmanCreator(TaskAction):
             argDict['lastEvent'] = dagspec['lastEvent']  # 'None'
             argDict['firstLumi'] = dagspec['firstLumi']  # 'None'
             argDict['firstRun'] = dagspec['firstRun']  # 'None'
-            argDict['userSandbox'] = task['tm_user_sandbox']  #'sandbox.tar.gz'
+            argDict['userSandbox'] = task['tm_user_sandbox']  #' sandbox.tar.gz'
             argDict['cmsswVersion'] = task['tm_job_sw']  # 'CMSSW_9_2_5'
             argDict['scramArch'] = task['tm_job_arch']  # 'slc6_amd64_gcc530'
             argDict['seeding'] = 'AutomaticSeeding'
@@ -689,6 +689,14 @@ class DagmanCreator(TaskAction):
             argDict['maxRuntime'] = dagspec['maxRuntime']  # -1
             argDict['scriptArgs'] = task['tm_scriptargs']
             argDict['CRAB_AdditionalOutputFiles'] = "{}"
+            # following one are for bkw compat. with CRABClient v3.241125, to be removed
+            argDict['CRAB_Archive'] = argDict['userSandbox']
+            argDict['CRAB_ISB'] = 'dummy'
+            argDict['CRAB_JobSW'] = argDict['cmsswVersion']
+            argDict['CRAB_JobArch'] = argDict['scramArch']
+            argDict['runAndLumiMask'] = argDict['runAndLumis']
+            argDict['inputFiles'] = argDict['inputFileList']
+
             # The following two are for fixing up job.submit files
             # SB argDict['CRAB_localOutputFiles'] = dagspec['localOutputFiles']
             # SB argDict['CRAB_Destination'] = dagspec['destination']

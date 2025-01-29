@@ -559,8 +559,14 @@ class DagmanCreator(TaskAction):
             prescriptDeferString = ''
         return prescriptDeferString
 
-    def makeDagSpecs(self, task, siteinfo, jobgroup, block, availablesites, datasites, outfiles, startjobid, parent=None, stage='conventional'):
-        """ need a comment line here """
+    def makeDagSpecs(self, task, siteinfo, jobgroup, block, availablesites, datasites,
+                     outfiles, startjobid, parentDag=None, stage='conventional'):
+        """
+        prepares the information for the lines for a DAG description file
+        as a list of `dagspec` objects. Each object is used to set value in the
+        DAG_FRAGMENT string and to extract values for JSON object which passes
+        arguments to CMSRunAnalysis.py (store in input_args.json), see prepareJobArguments below
+        """
         dagSpecs = []
         i = startjobid
         temp_dest, dest = makeLFNPrefixes(task)
@@ -599,10 +605,10 @@ class DagmanCreator(TaskAction):
             firstLumi = str(job['mask']['FirstLumi'])
             firstRun = str(job['mask']['FirstRun'])
             i = int(i) + 1
-            if parent is None or parent == "":
+            if parentDag is None or parentDag == "":
                 count = str(i)
             else:
-                count = f"{parent}-{i}"
+                count = f"{parentDag}-{i}"
             siteinfo[count] = groupid
             remoteOutputFiles = []
             localOutputFiles = []
@@ -678,7 +684,9 @@ class DagmanCreator(TaskAction):
             argDict = {}
             argDict['inputFileList'] = f"job_input_file_list_{dagspec['count']}.txt"  #'job_input_file_list_1.txt'
             argDict['runAndLumis'] = f"job_lumis_{dagspec['count']}.json"
-            argDict['CRAB_Id'] = dagspec['count'] #'1'
+            # TODO: should find a way to use only CRAB_Id and get rid or jobNumber
+            argDict['jobNumber'] = dagspec['count'] # '1' or '0-3' etc
+            argDict['CRAB_Id'] = dagspec['count'] # '1' or '0-3' etc
             argDict['lheInputFiles'] = dagspec['lheInputFiles']  # False
             argDict['firstEvent'] = dagspec['firstEvent']  # 'None'
             argDict['lastEvent'] = dagspec['lastEvent']  # 'None'
@@ -748,7 +756,9 @@ class DagmanCreator(TaskAction):
         """
 
         startjobid = kwargs.get('startjobid', 0)
-        parent = kwargs.get('parent', None)
+        # parentDag below is only used during automatic splitting
+        # possible values in each stage are:  probe: 0, tail: 1/2/3, processing: None
+        parentDag = kwargs.get('parent', None)
         stage = kwargs.get('stage', 'conventional')
         self.logger.debug('starting createSubdag, kwargs are:')
         self.logger.debug(str(kwargs))
@@ -787,7 +797,7 @@ class DagmanCreator(TaskAction):
                 kwargs['task']['max_runtime'] = proberuntime
                 outfiles = []
                 stage = 'probe'
-                parent = 0
+                parentDag = 0
             elif stage == 'processing':
                 # include a buffer of one hour for overhead beyond the time
                 # given to CMSSW
@@ -959,9 +969,10 @@ class DagmanCreator(TaskAction):
                 msg += f" This is expected to result in DESIRED_SITES = {list(available)}"
                 self.logger.debug(msg)
 
-            jobgroupDagSpecs, startjobid = self.makeDagSpecs(kwargs['task'], siteinfo,
-                                                             jobgroup, list(jgblocks)[0], availablesites,
-                                                             datasites, outfiles, startjobid, parent=parent, stage=stage)
+            jobgroupDagSpecs, startjobid = self.makeDagSpecs(
+                kwargs['task'], siteinfo, jobgroup, list(jgblocks)[0],
+                availablesites, datasites, outfiles, startjobid,
+                parentDag=parentDag, stage=stage)
             dagSpecs += jobgroupDagSpecs
 
         def getBlacklistMsg():
@@ -1007,7 +1018,7 @@ class DagmanCreator(TaskAction):
 
         ## Write down the DAG as needed by DAGMan.
         restHostForSchedd = kwargs['task']['resthost']
-        dag = DAG_HEADER.format(nodestate=f".{parent}" if parent else ('.0' if stage == 'processing' else ''),
+        dag = DAG_HEADER.format(nodestate=f".{parentDag}" if parentDag else ('.0' if stage == 'processing' else ''),
                                 resthost=restHostForSchedd)
         if stage == 'probe':
             dagSpecs = dagSpecs[:getattr(self.config.TaskWorker, 'numAutomaticProbes', 5)]
@@ -1085,7 +1096,7 @@ class DagmanCreator(TaskAction):
         elif stage == 'processing':
             dagFileName = "RunJobs0.subdag"
         else:
-            dagFileName = f"RunJobs{parent}.subdag"
+            dagFileName = f"RunJobs{parentDag}.subdag"
         argFileName = "input_args.json"
 
         ## Cache site information

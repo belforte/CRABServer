@@ -363,7 +363,7 @@ class DagmanCreator(TaskAction):
         jobSubmit['My.CRAB_RestHost'] = classad.quote(task['resthost'])
         jobSubmit['My.CRAB_DbInstance'] = classad.quote(task['dbinstance'])
         jobSubmit['My.CRAB_NumAutomJobRetries'] = str(task['numautomjobretries'])
-        jobSubmit['My.CRAB_Id'] = "$(count)"  #  count macro will be defined via VARS line in the DAG file
+        jobSubmit['My.CRAB_Id'] = classad.quote("$(count)")  # count macro will be defined in VARS line in the DAG file
         jobSubmit['My.CRAB_JobCount'] = str(task['jobcount'])
         temp_dest, dest = makeLFNPrefixes(task)
         jobSubmit['My.CRAB_OutTempLFNDir'] = classad.quote(temp_dest)

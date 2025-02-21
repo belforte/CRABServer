@@ -346,11 +346,11 @@ class DagmanCreator(TaskAction):
             quotedItems = quotedItems.lstrip('[').rstrip(']')  # remove square brackets [ ]
             value = "{" + quotedItems + "}"  # make final string adding the curly brackets { }
             return value
-        jobSubmit['My.CRAB_SiteBlacklist'] = pythonListToClassAdValue(task['tm_site_blacklist'])
-        jobSubmit['My.CRAB_SiteWhitelist'] =  pythonListToClassAdValue(task['tm_site_whitelist'])
-        jobSubmit['My.CRAB_AdditionalOutputFiles'] = pythonListToClassAdValue(task['tm_outfiles'])
-        jobSubmit['My.CRAB_EDMOutputFiles'] =  pythonListToClassAdValue(task['tm_edm_outfiles'])
-        jobSubmit['My.CRAB_TFileOutputFiles'] = pythonListToClassAdValue(task['tm_outfiles'])
+        jobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(task['tm_site_blacklist']))
+        jobSubmit['My.CRAB_SiteWhitelist'] =  classad.quote(','.join(task['tm_site_whitelist']))
+        jobSubmit['My.CRAB_AdditionalOutputFiles'] = classad.quote(','.join(task['tm_outfiles']))
+        jobSubmit['My.CRAB_EDMOutputFiles'] =  classad.quote(','.join(task['tm_edm_outfiles']))
+        jobSubmit['My.CRAB_TFileOutputFiles'] = classad.quote(','.join(task['tm_outfiles']))
         jobSubmit['My.CRAB_UserDN'] = classad.quote(task['tm_user_dn'])
         jobSubmit['My.CRAB_UserHN'] = classad.quote(task['tm_username'])
         jobSubmit['My.CRAB_AsyncDest'] = classad.quote(task['tm_asyncdest'])
@@ -708,7 +708,7 @@ class DagmanCreator(TaskAction):
             argDict['eventsPerLumi'] = task['tm_events_per_lumi']  #
             argDict['maxRuntime'] = dagspec['maxRuntime']  # -1
             argDict['scriptArgs'] = task['tm_scriptargs']
-            argDict['CRAB_AdditionalOutputFiles'] = "{}"
+            argDict['CRAB_AdditionalOutputFiles'] = ""
             # following one are for bkw compat. with CRABClient v3.241218 or earlier, to be removed
             argDict['CRAB_Archive'] = argDict['userSandbox']
             argDict['CRAB_ISB'] = 'dummy'

@@ -65,15 +65,15 @@ def addJobSubmitInfoToDagJobJDL(dagJdl, jobSubmit):
         'My.CRAB_UserGroup',
         'My.CRAB_DBSURL',
         'My.CRAB_PrimaryDataset',
-        'My.CRAB_AdditionalOutputFiles',
-        'My.CRAB_EDMOutputFiles',
-        'My.CRAB_TFileOutputFiles',
         'My.CRAB_RetryOnASOFailures',
         'My.CRAB_AsyncDest',
         'My.CRAB_ASOTimeout',
         'My.CRAB_PublishName',
         'My.CRAB_Publish',
         # usefulness of these is to be be determined
+        'My.CRAB_AdditionalOutputFiles',
+        'My.CRAB_EDMOutputFiles',
+        'My.CRAB_TFileOutputFiles',
         'My.CRAB_PublishDBSURL',  # not used anywhere in our code in GH
         'My.CRAB_TaskWorker',
         'My.CRAB_NumAutomJobRetries',

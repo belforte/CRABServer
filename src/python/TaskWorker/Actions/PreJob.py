@@ -343,14 +343,10 @@ class PreJob:
         ## Add the site black- and whitelists and the DESIRED_SITES to the
         ## Job.<job_id>.submit content.
         blackList, whiteList, desiredSites, dataLocations = self.redoSites(crab_retry, use_resubmit_info)
-        if blackList:
-            newJobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(blackList))
-        if whiteList:
-            newJobSubmit['My.CRAB_SiteWhitelist'] = classad.quote(','.join(whiteList))
-        if desiredSites:
-            newJobSubmit['My.DESIRED_SITES'] = classad.quote(','.join(desiredSites))
-        if dataLocations:
-            newJobSubmit['My.DESIRED_CMSDataLocations'] = classad.quote(','.join(dataLocations))
+        newJobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(blackList))
+        newJobSubmit['My.CRAB_SiteWhitelist'] = classad.quote(','.join(whiteList))
+        newJobSubmit['My.DESIRED_SITES'] = classad.quote(','.join(desiredSites))
+        newJobSubmit['My.DESIRED_CMSDataLocations'] = classad.quote(','.join(dataLocations))
 
         ## Finally read in the content of the generic Job.submit file as a string
         with open("Job.submit", 'r', encoding='utf-8') as fd:
@@ -369,7 +365,7 @@ class PreJob:
         """
         Re-define the set of sites where the job can run on by taking into account
         any site-white-list and site-black-list.
-        returns: blackList, whiteList, desiredSites, dataLocations (all python list of strings)
+        returns: blackList, whiteList, desiredSites, dataLocations (python lists of strings, could be [], never None)
         SIDE EFFECT: modifies self.resubmit_info
         """
         ## Get the site black- and whitelists either from the task ad or from

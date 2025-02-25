@@ -252,6 +252,7 @@ class PreJob:
         use_resubmit_info = False
         resubmit_jobids = []
         if 'CRAB_ResubmitList' in self.task_ad:
+            # SB this map is most likley useless, keep it in "Works/Don't Touch" spirit
             resubmit_jobids = map(str, self.task_ad['CRAB_ResubmitList'])
             try:
                 resubmit_jobids = set(resubmit_jobids)
@@ -343,9 +344,14 @@ class PreJob:
         ## Add the site black- and whitelists and the DESIRED_SITES to the
         ## Job.<job_id>.submit content.
         blackList, whiteList, desiredSites, dataLocations = self.redoSites(crab_retry, use_resubmit_info)
-        newJobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(blackList))
-        newJobSubmit['My.CRAB_SiteWhitelist'] = classad.quote(','.join(whiteList))
+        # this one is used in glideinWms matchmaking. MUST be the string 'site1,site2,site3....'
         newJobSubmit['My.DESIRED_SITES'] = classad.quote(','.join(desiredSites))
+        # these are simply "for us" to e.g. help debugging when looking at single jobs classAds
+        # use ClassAd feature to store/retrieve python lists, keep same format as used by DagmanResubmitter
+        # https://htcondor.readthedocs.io/en/latest/apis/python-bindings/api/version2/classad2/classad.html#classad2.ClassAd
+        newJobSubmit['My.CRAB_SiteBlacklist'] = blackList
+        newJobSubmit['My.CRAB_SiteWhitelist'] = whiteList
+        # for next one, use same format as DESIRED_Sites. In case one day gWms uses it to match
         newJobSubmit['My.DESIRED_CMSDataLocations'] = classad.quote(','.join(dataLocations))
 
         ## Finally read in the content of the generic Job.submit file as a string
@@ -369,8 +375,7 @@ class PreJob:
         SIDE EFFECT: modifies self.resubmit_info
         """
         ## Get the site black- and whitelists either from the task ad or from self.resubmit_info.
-        ## site lists can be strings (in classAds) or lists or sets (for easy manipulation)
-        ## so we use "type-explicit" names
+        ## site lists can be lists or sets (for easy manipulation) so we use "type-explicit" names
 
         siteBlackList = []
         siteWhiteList = []
@@ -380,7 +385,7 @@ class PreJob:
             if 'CRAB_SiteBlacklist' in self.task_ad:
                 if self.task_ad['CRAB_SiteBlacklist']:  # skip ad=''
                     siteBlackList = self.task_ad['CRAB_SiteBlacklist'].split(',')  # from 'a,b...' to ['a','b'...]
-                    siteblackSet = set(siteBlackList)
+                    siteBlackSet = set(siteBlackList)
             if 'CRAB_SiteWhitelist' in self.task_ad:
                 if self.task_ad['CRAB_SiteWhitelist']:
                     siteWhiteList = self.task_ad['CRAB_SiteWhitelist'].split(',')

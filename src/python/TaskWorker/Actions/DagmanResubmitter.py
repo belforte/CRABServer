@@ -70,6 +70,7 @@ class DagmanResubmitter(TaskAction):
 
         ## Calculate new parameters for resubmitted jobs. These parameters will
         ## be (re)written in the _CONDOR_JOB_AD when we do schedd.edit() below.
+        ad = classad.ClassAd()
         params = {'CRAB_ResubmitList'  : 'jobids',
                   'CRAB_SiteBlacklist' : 'site_blacklist',
                   'CRAB_SiteWhitelist' : 'site_whitelist',
@@ -78,6 +79,13 @@ class DagmanResubmitter(TaskAction):
                   'CRAB_RequestedCpus'        : 'numcores',
                   'JobPrio'            : 'priority'
                  }
+        for taskparam in params.values():
+            if ('resubmit_'+taskparam in task) and task['resubmit_'+taskparam] is not None:
+                # the following seems to Stefano a very complicated way to handle
+                # in different (proper) way the cases where resubmit_xxxx is list and
+                # where it is a number. Should be verified and simplified
+                if isinstance(task['resubmit_'+taskparam], list):
+                    ad[taskparam] = task['resubmit_'+taskparam]
         if ('resubmit_jobids' in task) and task['resubmit_jobids']:
             self.logger.debug("Resubmitting when JOBIDs were specified")
             try:
@@ -86,15 +94,12 @@ class DagmanResubmitter(TaskAction):
                 # all the jobs, not only the ones we want to resubmit. That's why the pre-job
                 # is saving the values of the parameters for each job retry in text files (the
                 # files are in the directory resubmit_info in the schedd).
-                # we use classAds here as way to pass informations to PreJobs, keep it simple
-                # and always use strings, same as DESIRES_SITES, do not mess with classad.expTree
                 for adparam, taskparam in params.items():
-                    if task['resubmit_' + taskparam] is not None:
-                        if isinstance(task['resubmit_'+taskparam], list):
-                            newAdValue = ','.join(task['resubmit_'+taskparam])
-                        else:
-                            newAdValue = str(task['resubmit_'+taskparam])
-                        schedd.edit(rootConst, adparam, newAdValue)
+                    if taskparam in ad:
+                        schedd.edit(rootConst, adparam, ad.lookup(taskparam))
+                    elif task['resubmit_' + taskparam] is not None:
+                        # param values set in this case are numbers, need to convert to strings
+                        schedd.edit(rootConst, adparam, str(task['resubmit_' + taskparam]))
                 schedd.act(htcondor.JobAction.Hold, rootConst)
                 schedd.edit(rootConst, "HoldKillSig", 'SIGUSR1')
                 schedd.act(htcondor.JobAction.Release, rootConst)

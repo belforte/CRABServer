@@ -382,11 +382,11 @@ class PreJob:
         if not use_resubmit_info:
             if 'CRAB_SiteBlacklist' in self.task_ad:
                 if self.task_ad['CRAB_SiteBlacklist']:  # skip ad=''
-                    siteBlackList = self.task_ad['CRAB_SiteBlacklist'].split(',')  # from 'a,b...' to ['a','b'...]
+                    siteBlackList = self.task_ad['CRAB_SiteBlacklist']
                     siteBlackSet = set(siteBlackList)
             if 'CRAB_SiteWhitelist' in self.task_ad:
                 if self.task_ad['CRAB_SiteWhitelist']:
-                    siteWhiteList = self.task_ad['CRAB_SiteWhitelist'].split(',')
+                    siteWhiteList = self.task_ad['CRAB_SiteWhitelist']
                     siteWhiteSet = set(siteWhiteList)
         else:
             inkey = str(crab_retry) if crab_retry == 0 else str(crab_retry - 1)

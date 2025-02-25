@@ -347,10 +347,8 @@ class PreJob:
         # this one is used in glideinWms matchmaking. MUST be the string 'site1,site2,site3....'
         newJobSubmit['My.DESIRED_SITES'] = classad.quote(','.join(desiredSites))
         # these are simply "for us" to e.g. help debugging when looking at single jobs classAds
-        # use ClassAd feature to store/retrieve python lists, keep same format as used by DagmanResubmitter
-        # https://htcondor.readthedocs.io/en/latest/apis/python-bindings/api/version2/classad2/classad.html#classad2.ClassAd
-        newJobSubmit['My.CRAB_SiteBlacklist'] = blackList
-        newJobSubmit['My.CRAB_SiteWhitelist'] = whiteList
+        newJobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(blackList))
+        newJobSubmit['My.CRAB_SiteWhitelist'] = classad.quote(','.join(whiteList))
         # for next one, use same format as DESIRED_Sites. In case one day gWms uses it to match
         newJobSubmit['My.DESIRED_CMSDataLocations'] = classad.quote(','.join(dataLocations))
 

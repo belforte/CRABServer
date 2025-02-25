@@ -368,57 +368,63 @@ class PreJob:
         returns: blackList, whiteList, desiredSites, dataLocations (python lists of strings, could be [], never None)
         SIDE EFFECT: modifies self.resubmit_info
         """
-        ## Get the site black- and whitelists either from the task ad or from
-        ## self.resubmit_info.
-        siteblacklist = set()
-        sitewhitelist = set()
+        ## Get the site black- and whitelists either from the task ad or from self.resubmit_info.
+        ## site lists can be strings (in classAds) or lists or sets (for easy manipulation)
+        ## so we use "type-explicit" names
+
+        siteBlackList = []
+        siteWhiteList = []
+        siteBlackSet = set()
+        siteWhiteSet = set()
         if not use_resubmit_info:
             if 'CRAB_SiteBlacklist' in self.task_ad:
-                siteblacklist = set(self.task_ad['CRAB_SiteBlacklist'])
+                if self.task_ad['CRAB_SiteBlacklist']:  # skip ad=''
+                    siteBlackList = self.task_ad['CRAB_SiteBlacklist'].split(',')  # from 'a,b...' to ['a','b'...]
+                    siteblackSet = set(siteBlackList)
             if 'CRAB_SiteWhitelist' in self.task_ad:
-                sitewhitelist = set(self.task_ad['CRAB_SiteWhitelist'])
+                if self.task_ad['CRAB_SiteWhitelist']:
+                    siteWhiteList = self.task_ad['CRAB_SiteWhitelist'].split(',')
+                    siteWhiteSet = set(siteWhiteList)
         else:
             inkey = str(crab_retry) if crab_retry == 0 else str(crab_retry - 1)
             while inkey not in self.resubmit_info and int(inkey) > 0:
                 inkey = str(int(inkey) -  1)
-            siteblacklist = set(self.resubmit_info[inkey].get('site_blacklist', []))
-            sitewhitelist = set(self.resubmit_info[inkey].get('site_whitelist', []))
+            siteBlackSet = set(self.resubmit_info[inkey].get('site_blacklist', []))
+            siteWhiteSet = set(self.resubmit_info[inkey].get('site_whitelist', []))
         ## Save the current site black- and whitelists in self.resubmit_info for the
         ## current job retry number.
         outkey = str(crab_retry)
         if outkey not in self.resubmit_info:
             self.resubmit_info[outkey] = {}
-        blackList = list(siteblacklist)
-        whiteList = list(sitewhitelist)
-        self.resubmit_info[outkey]['site_blacklist'] = list(siteblacklist)
-        self.resubmit_info[outkey]['site_whitelist'] = list(sitewhitelist)
+        self.resubmit_info[outkey]['site_blacklist'] = siteBlackList
+        self.resubmit_info[outkey]['site_whitelist'] = siteWhiteList
 
         ## Get the list of available sites (the sites where this job could run).
         with open("site.ad.json", 'r', encoding='utf-8') as fd:
             site_info = json.load(fd)
         group = site_info[self.job_id]
-        available = set(site_info['group_sites'][str(group)])
-        datasites = set(site_info['group_datasites'][str(group)])
+        availableSet = set(site_info['group_sites'][str(group)])
+        datasitesSet = set(site_info['group_datasites'][str(group)])
         ## Take the intersection between the available sites and the site whitelist.
         ## This is the new set of available sites.
-        if sitewhitelist:
-            available &= sitewhitelist
+        if siteWhiteList:
+            availableSet &= siteWhiteSet
         ## Remove from the available sites the ones that are in the site blacklist,
         ## unless they are also in the site whitelist (i.e. never blacklist something
         ## on the whitelist).
-        available -= (siteblacklist - sitewhitelist)
-        if not available:
+        availableSet -= (siteBlackSet - siteWhiteSet)
+        if not availableSet:
             self.logger.error("Can not submit since DESIRED_Sites list is empty")
             self.prejob_exit_code = 1
             sys.exit(self.prejob_exit_code)
         ## Make sure that attributest which will be used in MatchMaking are SORTED lists
-        available = list(available)
+        available = list(availableSet)
         available.sort()
-        datasites = list(datasites)
+        datasites = list(datasitesSet)
         datasites.sort()
         desiredSites = available
         dataLocations = datasites
-        return blackList, whiteList, desiredSites, dataLocations
+        return siteBlackList, siteWhiteList, desiredSites, dataLocations
 
     def touch_logs(self, crab_retry):
         """

@@ -13,7 +13,7 @@ import errno
 import logging
 from ast import literal_eval
 
-from ServerUtilities import getWebdirForDb, insertJobIdSid
+from ServerUtilities import getWebdirForDb, insertJobIdSid, pythonListToClassAdExprTree
 from TaskWorker.Actions.RetryJob import JOB_RETURN_CODES
 
 import htcondor2 as htcondor
@@ -346,9 +346,10 @@ class PreJob:
         blackList, whiteList, desiredSites, dataLocations = self.redoSites(crab_retry, use_resubmit_info)
         # this one is used in glideinWms matchmaking. MUST be the string 'site1,site2,site3....'
         newJobSubmit['My.DESIRED_SITES'] = classad.quote(','.join(desiredSites))
-        # these are simply "for us" to e.g. help debugging when looking at single jobs classAds
-        newJobSubmit['My.CRAB_SiteBlacklist'] = classad.quote(','.join(blackList))
-        newJobSubmit['My.CRAB_SiteWhitelist'] = classad.quote(','.join(whiteList))
+        # these are simply "for us" to e.g. use same format as in the ads coming from DAG submission
+        # i.e. a classAd corresponding to a python list.
+        newJobSubmit['My.CRAB_SiteBlacklist'] = pythonListToClassAdExprTree(blackList)
+        newJobSubmit['My.CRAB_SiteWhitelist'] = pythonListToClassAdExprTree(whiteList)
         # for next one, use same format as DESIRED_Sites. In case one day gWms uses it to match
         newJobSubmit['My.DESIRED_CMSDataLocations'] = classad.quote(','.join(dataLocations))
 

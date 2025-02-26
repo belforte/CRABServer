@@ -98,13 +98,6 @@ class DagmanResubmitter(TaskAction):
                         else:
                             newAdValue = str(task['resubmit_'+taskparam])
                         schedd.edit(rootConst, adparam, newAdValue)
-                #### for jobids we need the ad to be a list due to the way it is used
-                #### in AdjustSites.py in the black-magic part which edit Dagman logs and which I
-                #### do not dare to touch. Use ClassAd lookup method to obtain the internal
-                #### representation (ExprTree) of the ad to be used in schedd.edit
-                ###tmpAd = classad.ClassAd()
-                ###tmpAd['CRAB_ResubmitList'] = task['resubmit_jobids']
-                ###schedd.edit(rootConst, 'CRAB_ResubmitList', tmpAd.lookup('CRAB_ResubmitList'))
                 # finally restart the dagman with the 3 lines below
                 schedd.act(htcondor.JobAction.Hold, rootConst)
                 schedd.edit(rootConst, "HoldKillSig", 'SIGUSR1')

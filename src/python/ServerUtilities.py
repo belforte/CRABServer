@@ -1182,6 +1182,7 @@ def pythonListToClassAdExprTree(aList):
     # https://htcondor.readthedocs.io/en/latest/man-pages/condor_submit.html#submit-description-file-commands
     # the python list [a, b, c] needs to become '{"a","b","c"}'
     # i.e. a string with the ExprTree representatio of a ClassAd list
+    import json
     quotedItems = json.dumps(aList)  # from [s1, s2] to the string '["s1","s2"]'
     quotedItems = quotedItems.lstrip('[').rstrip(']')  # remove square brackets [ ]
     value = "{" + quotedItems + "}"  # make final string adding the curly brackets { }

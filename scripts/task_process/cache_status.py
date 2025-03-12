@@ -573,7 +573,37 @@ def reportDagStatusToDB(status):
     7 (STATUS_FUTILE): The node will never run because an ancestor node failed.
     """
 
-    # to be implemented
+    # map DAGMAN status number to a string which makes sense for us
+    DAG_STATUS_TO_STRING = {
+        0: 'SUBMITTED',
+        1: 'SUBMITTED',
+        3: 'RUNNING',
+        4: 'RUNNING',
+        5: 'DONE',
+        6: 'ERROR',
+        7: 'ERROR'
+    }
+    # N.B. Shoul separate DONE in SUCCESS or FAILED based on whether all job succeeded or not.
+    # Do we report just DAG status, or a combined "global" status ?
+
+    with open(os.environ['_CONDOR_JOB_AD'], 'r', encoding='utf-8') as fd:
+        ad = classad.parseOne(fd)
+    host = ad['CRAB_RestHost']
+    dbInstance = ad['CRAB_DbInstance']
+    cert = ad['X509UserProxy']
+    taskname = ad['CRAB_Reqname']
+    logging.info("UPDATE DAG STATUS IN TASK DB")
+    logging.info(f"host {host} dbInstance {dbInstance} cert {cert}")
+    logging.info(f"taskname {taskname}  DAGstatus {status}")
+    from RESTInteractions import CRABRest  # pylint: disable=import-outside-toplevel
+    from urllib.parse import urlencode  # pylint: disable=import-outside-toplevel
+    crabserver = CRABRest(host, cert, cert, retry=3, userAgent='CRABSchedd')
+    crabserver.setDbInstance(dbInstance)
+    data = {'subresource': 'edit', 'column': 'tm_dagman_status',
+            'value': status, 'workflow': taskname}
+    R = crabserver.post(api='task', data=urlencode(data))
+    logging.info(f"HTTP POST returned {R}")
+
     return
 
 def main():
@@ -595,6 +625,7 @@ def main():
         storeNodesInfoInTxtFile(updatedInfo)
         storeNodesInfoInJSONFile(updatedInfo)
 
+        # make sure that we only do this when status has changed, not every 5 minutes, even if...all in all..
         reportDagStatusToDB(updatedInfo['nodes']['DagStatus'])
 
     except Exception:  # pylint: disable=broad-except

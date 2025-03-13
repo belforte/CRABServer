@@ -17,6 +17,7 @@ import json
 import htcondor2 as htcondor
 import classad2 as classad
 
+from CRABInterface.Regexps import RX_CUDA_VERSION
 
 logging.basicConfig(filename='task_process/cache_status.log', level=logging.DEBUG)
 
@@ -574,17 +575,20 @@ def reportDagStatusToDB(status):
     """
 
     # map DAGMAN status number to a string which makes sense for us
+    # N.B. separate status=5 in SUCCESS or FAILED based on whether all job succeeded or not ?
+    # or is already done by DAGMAN ?
     DAG_STATUS_TO_STRING = {
-        0: 'SUBMITTED',
-        1: 'SUBMITTED',
+        0: 'SUBMITTED',  # clear for a node, but for DAG ? to be verified
+        1: 'SUBMITTED',  # clear for a node, but for DAG ? to be verified
         3: 'RUNNING',
         4: 'RUNNING',
-        5: 'DONE',
-        6: 'ERROR',
-        7: 'ERROR'
+        5: 'COMPLETED',
+        6: 'FAILED',  # one ore more jobs (DAG nodes) failed
+        7: 'ERROR'  # as far as Stefano understand, this should never happen
     }
-    # N.B. Shoul separate DONE in SUCCESS or FAILED based on whether all job succeeded or not.
     # Do we report just DAG status, or a combined "global" status ?
+
+    statusName = DAG_STATUS_TO_STRING(status)
 
     with open(os.environ['_CONDOR_JOB_AD'], 'r', encoding='utf-8') as fd:
         ad = classad.parseOne(fd)
@@ -594,14 +598,17 @@ def reportDagStatusToDB(status):
     taskname = ad['CRAB_Reqname']
     logging.info("UPDATE DAG STATUS IN TASK DB")
     logging.info(f"host {host} dbInstance {dbInstance} cert {cert}")
-    logging.info(f"taskname {taskname}  DAGstatus {status}")
+    logging.info(f"taskname {taskname}  DAGstatus {statusName}")
     from RESTInteractions import CRABRest  # pylint: disable=import-outside-toplevel
     from urllib.parse import urlencode  # pylint: disable=import-outside-toplevel
-    crabserver = CRABRest(host, cert, cert, retry=3, userAgent='CRABSchedd')
+    crabserver = CRABRest(host, cert, cert, retry=0, userAgent='CRABSchedd')
     crabserver.setDbInstance(dbInstance)
     data = {'subresource': 'edit', 'column': 'tm_dagman_status',
-            'value': status, 'workflow': taskname}
-    R = crabserver.post(api='task', data=urlencode(data))
+            'value': statusName, 'workflow': taskname}
+    try:
+        R = crabserver.post(api='task', data=urlencode(data))
+    except Exception as ex:
+        R = str(ex)
     logging.info(f"HTTP POST returned {R}")
 
     return
@@ -626,7 +633,8 @@ def main():
         storeNodesInfoInJSONFile(updatedInfo)
 
         # make sure that we only do this when status has changed, not every 5 minutes, even if...all in all..
-        reportDagStatusToDB(updatedInfo['nodes']['DagStatus'])
+        # isTimeToReport
+        reportDagStatusToDB(updatedInfo['nodes']['DagStatus']['DagStatus'])
 
     except Exception:  # pylint: disable=broad-except
         logging.exception("error during main loop")

@@ -17,8 +17,6 @@ import json
 import htcondor2 as htcondor
 import classad2 as classad
 
-from CRABInterface.Regexps import RX_CUDA_VERSION
-
 logging.basicConfig(filename='task_process/cache_status.log', level=logging.DEBUG)
 
 NODE_DEFAULTS = {

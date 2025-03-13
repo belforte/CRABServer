@@ -586,7 +586,7 @@ def reportDagStatusToDB(status):
     }
     # Do we report just DAG status, or a combined "global" status ?
 
-    statusName = DAG_STATUS_TO_STRING(status)
+    statusName = DAG_STATUS_TO_STRING[status]
 
     with open(os.environ['_CONDOR_JOB_AD'], 'r', encoding='utf-8') as fd:
         ad = classad.parseOne(fd)
@@ -605,7 +605,7 @@ def reportDagStatusToDB(status):
             'value': statusName, 'workflow': taskname}
     try:
         R = crabserver.post(api='task', data=urlencode(data))
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-except
         R = str(ex)
     logging.info(f"HTTP POST returned {R}")
 

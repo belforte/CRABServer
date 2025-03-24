@@ -602,6 +602,7 @@ class MasterWorker(object):
             self.slaves.injectWorks(toInject)
 
             for action in self.recurringActions:
++                self.logger.info('processing %s', action)
                 if action.isTimeToGo():
                     #Maybe we should use new slaves and not reuse the ones used for the tasks
                     self.logger.debug("Injecting recurring action: \n%s", (str(action.__module__)))
@@ -610,6 +611,10 @@ class MasterWorker(object):
             self.logger.info('Master Worker status:')
             self.logger.info(' - free slaves: %d', self.slaves.freeSlaves())
             self.logger.info(' - acquired tasks: %d', self.slaves.queuedTasks())
+            if self.slaves.queuedTasks():
+                queued = self.slaves.listQueuedTasks()
+                for qt in  queued:
+                    self.logger.info('      %s', qt)
             self.logger.info(' - tasks pending in queue: %d', self.slaves.pendingTasks())
 
             time.sleep(self.config.TaskWorker.polling)

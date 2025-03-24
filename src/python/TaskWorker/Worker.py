@@ -145,10 +145,12 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
 
         removeTaskLogHandler(logger, taskhandler)
 
+        logger.debug("About to put done message in result queue for workid %s", workid)
         results.put({
                      'workid': workid,
                      'out' : outputs
                     })
+        logger.debug("Done")
 
 
 def processWorker(inputs, results, resthost, dbInstance, logsDir, procnum):
@@ -284,7 +286,7 @@ class Worker(object):
                     self.logger.debug('Completed work %d on %s', workid, taskname)
                 else:
                     # recurring actions do not return a Result object
-                    self.logger.debug('Completed work %s', str(out))
+                    self.logger.debug('Completed work %d %s', workid, str(out))
 
                 if isinstance(out['out'], list):
                     allout.extend(out['out'])
@@ -306,6 +308,15 @@ class Worker(object):
 
         :return int: number of working slaves."""
         return len(self.working)
+
+    def listQueuedTasks(self):
+        """ list tasks being worked on """
+        tasks = [ v['workflow'] for v in self.working.values() ]
+        return tasks
+
+    def listWorks(self):
+        """ list what's being worked on"""
+        return self.working
 
     def queueableTasks(self):
         """Depending on the queue size limit

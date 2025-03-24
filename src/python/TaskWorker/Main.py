@@ -81,16 +81,18 @@ def main():
         # override root loglevel to debug
         logging.getLogger().setLevel(logging.DEBUG)
         # need to force a single thread
-        if not hasattr(configuration, 'TaskWorker'):
-            configuration.section_('TaskWorker')
-            configuration.TaskWorker.nslaves = 1
+        #SB if not hasattr(configuration, 'TaskWorker'):
+        #SB     configuration.section_('TaskWorker')
+        #SB     configuration.TaskWorker.nslaves = 1
         if not hasattr(configuration, 'FeatureFlags'):
             configuration.section_('FeatureFlags')
             configuration.FeatureFlags.childWorker = False
         # start with pdb
         import pdb #pylint: disable=import-outside-toplevel
         pdb.set_trace() #pylint: disable=forgotten-debug-statement
-        mc = MasterWorker(config=configuration, logWarning=False, logDebug=True, sequential=True, console=True)
+        #SB mc = MasterWorker(config=configuration, logWarning=False, logDebug=True, sequential=True, console=True)
+        #SB run only Master in pdb, leave slaves as multiprocesses with logging to files
+        mc = MasterWorker(config=configuration, logWarning=False, logDebug=True, sequential=False, console=False)
         mc.algorithm()
         # exit program
         sys.exit(0)

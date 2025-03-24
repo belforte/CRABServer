@@ -602,7 +602,7 @@ class MasterWorker(object):
             self.slaves.injectWorks(toInject)
 
             for action in self.recurringActions:
-+                self.logger.info('processing %s', action)
+                self.logger.info('processing %s', action)
                 if action.isTimeToGo():
                     #Maybe we should use new slaves and not reuse the ones used for the tasks
                     self.logger.debug("Injecting recurring action: \n%s", (str(action.__module__)))

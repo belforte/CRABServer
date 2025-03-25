@@ -145,7 +145,8 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
 
         removeTaskLogHandler(logger, taskhandler)
 
-        logger.debug("About to put done message in result queue for workid %s", workid)
+        logger.debug("About to put out message in results queue for workid %s", workid)
+        logger.debug(" out.result: %s - out.task: %s ", outputs.result, outputs.task)
         results.put({
                      'workid': workid,
                      'out' : outputs

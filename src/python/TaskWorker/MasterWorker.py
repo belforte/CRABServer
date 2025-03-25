@@ -602,11 +602,14 @@ class MasterWorker(object):
             self.slaves.injectWorks(toInject)
 
             for action in self.recurringActions:
-                self.logger.info('processing %s', action)
                 if action.isTimeToGo():
                     #Maybe we should use new slaves and not reuse the ones used for the tasks
-                    self.logger.debug("Injecting recurring action: \n%s", (str(action.__module__)))
-                    self.slaves.injectWorks([(handleRecurring, {'tm_username': 'recurring', 'tm_taskname' : action.__module__}, 'FAILED', action.__module__)])
+                    # use an unique ID to track this action
+                    actionName = str(action.__module__).split('.')[-1]
+                    now = time.strftime("%y%m%d_%H%M%S", time.localtime())
+                    actionName += '.' + now
+                    self.logger.debug("Injecting recurring action: \n%s", actionName)
+                    self.slaves.injectWorks([(handleRecurring, {'tm_username': 'recurring', 'tm_taskname' : actionName}, 'FAILED', action.__module__)])
 
             self.logger.info('Master Worker status:')
             self.logger.info(' - free slaves: %d', self.slaves.freeSlaves())

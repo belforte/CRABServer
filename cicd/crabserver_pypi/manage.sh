@@ -80,9 +80,9 @@ status_srv() {
     pgid=$(echo "${out}" | awk '{print $NF}')
     if [[ "${pgid}" =~ ^[0-9]+$ ]]; then
         pid=$(pgrep -g "${pgid}" | head -n1)
-        pypath=`cat /proc/"${pid}"/environ | tr '\0' '\n' | grep PYTHONPATH`
-        echo $pypath
-        export $pypath
+        pypath=$(cat /proc/"${pid}"/environ | tr '\0' '\n' | grep PYTHONPATH | cut -d= -f2-)
+        echo "PYTHONPATH=$pypath"
+        export PYTHONPATH="$pypath"
         python -c 'from CRABInterface import __version__; print(f"Runnning version {__version__}")'
     fi
     exit "${rc}"

@@ -615,9 +615,9 @@ class MasterWorker(object):
             self.logger.info(' - free slaves: %d', self.slaves.freeSlaves())
             self.logger.info(' - acquired tasks: %d', self.slaves.queuedTasks())
             if self.slaves.queuedTasks():
-                queued = self.slaves.listQueuedTasks()
-                for qt in  queued:
-                    self.logger.info('      %s', qt)
+                working = self.slaves.listWorks()
+                for wid, work in working.items():
+                    self.logger.info(f"      wid {wid} : {work['workflow']}")
             self.logger.info(' - tasks pending in queue: %d', self.slaves.pendingTasks())
 
             time.sleep(self.config.TaskWorker.polling)

@@ -366,7 +366,7 @@ class DagmanCreator(TaskAction):
                 task['tm_output_lfn'].startswith('/store/group/rucio'):
             jobSubmit['My.CRAB_ASOTimeout'] = str(getattr(self.config.TaskWorker, 'ASORucioTimeout', 0))
         else:
-            jobSubmit['My.CRAB_ASOTimeout'] = getattr(self.config.TaskWorker, 'ASOTimeout', 0)
+            jobSubmit['My.CRAB_ASOTimeout'] = str(getattr(self.config.TaskWorker, 'ASOTimeout', 0))
         jobSubmit['My.CRAB_RestHost'] = classad.quote(task['resthost'])
         jobSubmit['My.CRAB_DbInstance'] = classad.quote(task['dbinstance'])
         jobSubmit['My.CRAB_NumAutomJobRetries'] = str(task['numautomjobretries'])

@@ -103,9 +103,10 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
                WORKER_CONFIG.FeatureFlags.childWorker:
                 logger.debug(f'Run {work.__name__} in childWorker.')
                 args = (resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
-                outputs = startChildWorker(WORKER_CONFIG, work, args, logger)
+                workOutput = startChildWorker(WORKER_CONFIG, work, args, logger)
             else:
-                outputs = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+                workOutput = work(resthost, dbInstance, WORKER_CONFIG, task, procnum, inputargs)
+            outputs = Result(task=task, result="OK")
         except TapeDatasetException as tde:
             outputs = Result(task=task, err=str(tde))
         except SubmissionRefusedException as sre:
@@ -140,17 +141,21 @@ def processWorkerLoop(inputs, results, resthost, dbInstance, procnum, logger, lo
             out, _, _ = executeCommand("ps u -p %s | awk '{sum=sum+$6}; END {print sum/1024}'" % os.getpid())
             msg = "RSS after finishing %s: %s MB" % (task['tm_taskname'], out.strip())
             logger.debug(msg)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("Problem getting worker RSS:")
 
         removeTaskLogHandler(logger, taskhandler)
 
         logger.debug("About to put out message in results queue for workid %s", workid)
-        logger.debug(" out.result: %s - out.task: %s ", outputs.result, outputs.task)
-        results.put({
-                     'workid': workid,
-                     'out' : outputs
-                    })
+        logger.debug(" out.result: %s  ", outputs.result)
+        logger.debug(" out.task: %s ", outputs.task)
+        try:
+            results.put({
+                'workid': workid,
+                'out' : outputs
+            })
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(f"Unable to push worker result to shared queue:\n{ex}")
         logger.debug("Done")
 
 

@@ -89,6 +89,7 @@ def getWritePFN(rucioClient=None, siteName='', lfn='',  # pylint: disable=danger
             msg = 'Rucio lfn2pfn resolution for %s failed with:\n%s\nTry next one.'
             logger.warning(msg, operation, str(ex))
             exceptionString += f"operation: {operation}, exception: {ex}\n"
+            raise TaskWorkerException(msg, retry=True) from ex
     if not didDict:
         msg = f"lfn2pfn resolution with Rucio failed for site: {siteName}  LFN: {lfn}"
         msg += f" with exception(s) :\n{exceptionString}"

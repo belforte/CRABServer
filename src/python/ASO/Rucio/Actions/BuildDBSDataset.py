@@ -111,6 +111,10 @@ class BuildDBSDataset():
         datasets = self.rucioClient.list_content(self.transfer.rucioScope, container)
         # remove log dataset
         datasets = [ds for ds in datasets if not ds['name'].endswith('#LOGS')]
+        ##SB suspend xfer rule after 2 datasets have been created
+        if len(datasets) >= 2:
+            ruleId = self.transfer.containerRuleID
+            self.rucioClient.update_replication_rule(ruleId, {'state':'SUSPENDED'})
         self.logger.debug(f"datasets in container: {datasets}")
 
         # get_metadata_bulk "Always" raise InvalidObject.

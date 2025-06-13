@@ -281,7 +281,7 @@ class MonitorLockStatus:
         restFileDoc = {
             'asoworker': 'rucio',
             'list_of_ids': [x['id'] for x in fileDocs],
-            'publish_flag': [1] * num,
+            'publish_flag': 1,
             'list_of_publication_state': ['NEW'] * num,
         }
         updateToREST(self.crabRESTClient, 'filetransfers', 'updatePublication', restFileDoc)

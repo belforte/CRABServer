@@ -38,8 +38,12 @@ from WMCore.WMRuntime.Tools.Scram import ARCH_TO_OS, SCRAM_TO_ARCH
 import htcondor2 as htcondor
 import classad2 as classad
 
-DAG_HEADER = """
+DAG_CONFIGURATION_FILE = """
+DAGMAN_PUT_FAILED_JOBS_ON_HOLD = True
+"""
 
+DAG_HEADER = """
+CONFIG RunJobs.config
 NODE_STATUS_FILE node_state{nodestate} 120 ALWAYS-UPDATE
 
 # NOTE: a file must be present, but 'noop' makes it not be read.
@@ -1116,6 +1120,9 @@ class DagmanCreator(TaskAction):
         ## Save the DAG into a file.
         with open(dagFileName, "w", encoding='utf-8') as fd:
             fd.write(dag)
+        # also thd DAG config
+        with open('RunJobs.config', "w", encoding='utf-8') as fd:
+            fd.write(DAG_CONFIGURATION_FILE)
 
         kwargs['task']['jobcount'] = len(dagSpecs)
 
@@ -1272,7 +1279,7 @@ class DagmanCreator(TaskAction):
                       'run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
         # files to be transferred to the scheduler by fDagmanSubmitter (these will all be placed in InputFiles.tar.gz)
         filesForSched = filesForWN + \
-            ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'Job.submit', 'dag_bootstrap.sh',
+            ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'RunJobs.config', 'Job.submit', 'dag_bootstrap.sh',
              'AdjustSites.py', 'site.ad.json', 'TaskManagerRun.tar.gz',
              'datadiscovery.pkl', 'taskinformation.pkl', 'taskworkerconfig.pkl',]
 

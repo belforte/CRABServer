@@ -134,9 +134,12 @@ if [ "X$TASKWORKER_ENV" = "X" -a ! -e CRAB3.zip ]; then
         condor_qedit $CONDOR_ID DagmanHoldReason "'Unable to unpack the task manager runtime environment.'"
         exit 1
     fi
-    echo "unzip CRAB3.zip ..."
-    unzip -oq CRAB3.zip
+    #echo "unzip CRAB3.zip ..."
+    #unzip -oq CRAB3.zip
     #ls -lagoh
+
+    # extract from the JobWrapper tarball the executable to be used as "cmd" in condor submit to Grid
+    tar xf CMSRunAnalysis.tar.gz gWMS-CMSRunAnalysis.sh
 
     export TASKWORKER_ENV="1"
 fi
@@ -149,6 +152,7 @@ cp $_CONDOR_JOB_AD  ./_CONDOR_JOB_AD
 if [ -e AdjustSites.py ]; then
     export schedd_name=`condor_config_val schedd_name`
     echo "Execute AdjustSites.py ..."
+    export PYTHONPATH=$PWD:$PWD/CRAB3.zip:$PWD/WMCore.zip:$PYTHONPATH
      # need unbuffered otherwise we get weird looking log
     PYTHONUNBUFFERED=1 python3 AdjustSites.py
     ret=$?

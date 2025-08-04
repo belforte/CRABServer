@@ -24,6 +24,8 @@ from urllib.parse import urlencode
 from ServerUtilities import MAX_DISK_SPACE, MAX_IDLE_JOBS, MAX_POST_JOBS, TASKLIFETIME
 from ServerUtilities import getLock, checkS3Object, getColumn, pythonListToClassAdExprTree
 
+from CRABUtils.Utils import addToGZippedTarfile
+
 import TaskWorker.DataObjects.Result
 from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.Actions.Splitter import SplittingSummary
@@ -444,17 +446,15 @@ class DagmanCreator(TaskAction):
         jobSubmit['Arguments'] = classad.quote("--jobId=$(count)")
         jobSubmit['transfer_output_files'] = "jobReport.json.$(count)"
 
-        additional_input_file = ""
         additional_environment_options = ""
         if os.path.exists("CMSRunAnalysis.tar.gz"):
             additional_environment_options += ' CRAB_RUNTIME_TARBALL=local'
-            additional_input_file += ", CMSRunAnalysis.tar.gz"
         else:
             raise TaskWorkerException(f"Cannot find CMSRunAnalysis.tar.gz inside the cwd: {os.getcwd()}")
-        if os.path.exists("TaskManagerRun.tar.gz"):
-            additional_environment_options += ' CRAB_TASKMANAGER_TARBALL=local'
-        else:
-            raise TaskWorkerException(f"Cannot find TaskManagerRun.tar.gz inside the cwd: {os.getcwd()}")
+
+        """
+        additional_input_file = ""
+        
         additional_input_file += ", sandbox.tar.gz"  # it will be present on SPOOL_DIR after dab_bootstrap
         additional_input_file += ", input_args.json"
         additional_input_file += ", run_and_lumis.tar.gz"
@@ -462,6 +462,8 @@ class DagmanCreator(TaskAction):
         additional_input_file += ", submit_env.sh"
         additional_input_file += ", cmscp.sh"
         jobSubmit['transfer_input_files'] = f"CMSRunAnalysis.sh, cmscp.py{additional_input_file}"
+        """
+        jobSubmit['transfer_input_files'] = "CMSRunAnalysis.tar.gz, sandbox.tar.gz"
         # make sure coredump (if any) is not added to output files ref: https://lists.cs.wisc.edu/archive/htcondor-users/2022-September/msg00052.shtml
         jobSubmit['coresize'] = "0"
 
@@ -813,7 +815,7 @@ class DagmanCreator(TaskAction):
 
         outfiles = kwargs['task']['tm_outfiles'] + kwargs['task']['tm_tfile_outfiles'] + kwargs['task']['tm_edm_outfiles']
 
-        os.chmod("CMSRunAnalysis.sh", 0o755)
+        ##SBSB os.chmod("CMSRunAnalysis.sh", 0o755)
 
         # This config setting acts as a global black list
         global_blacklist = set(self.loadJSONFromFileInScratchDir('blacklistedSites.txt'))
@@ -1187,7 +1189,7 @@ class DagmanCreator(TaskAction):
 
     def executeInternal(self, *args, **kw):
         """ all real work is done here """
-
+        """
         # put in current directory all files that we need to move around
         transform_location = getLocation('CMSRunAnalysis.sh')
         cmscp_location = getLocation('cmscp.py')
@@ -1206,6 +1208,7 @@ class DagmanCreator(TaskAction):
         shutil.copy(dag_bootstrap_location, '.')
         shutil.copy(bootstrap_location, '.')
         shutil.copy(adjust_location, '.')
+        """
 
         # make sure we have InputSandBox
         sandboxTarBall = 'sandbox.tar.gz'  # SB only used once 10 lines below ! no need for a variable !
@@ -1239,19 +1242,6 @@ class DagmanCreator(TaskAction):
         kw['task']['dbinstance'] = self.crabserver.getDbInstance()  # SB never used in here nor in DagmanSubmitter ??
         params = {}
 
-        # files to be transferred to remove WN's via Job.submit, could pack most in a tarball
-        filesForWN = ['submit_env.sh', 'CMSRunAnalysis.sh', 'cmscp.py', 'cmscp.sh', 'CMSRunAnalysis.tar.gz',
-                      'run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
-        # files to be transferred to the scheduler by fDagmanSubmitter (these will all be placed in InputFiles.tar.gz)
-        filesForSched = filesForWN + \
-            ['gWMS-CMSRunAnalysis.sh', 'RunJobs.dag', 'Job.submit', 'dag_bootstrap.sh',
-             'AdjustSites.py', 'site.ad.json', 'TaskManagerRun.tar.gz',
-             'datadiscovery.pkl', 'taskinformation.pkl', 'taskworkerconfig.pkl',]
-
-        if kw['task']['tm_input_dataset']:
-            filesForSched.append("input_dataset_lumis.json")
-            filesForSched.append("input_dataset_duplicate_lumis.json")
-
         # now create the DAG. According to wheter this runs in the TW or in one PreDag, it will
         # create the MAIN DAG or one of the subdags for automatic splitting, hence it was called "createsubdag"
         jobSubmit, splitterResult, subdags = self.createSubdag(*args, **kw)
@@ -1263,8 +1253,26 @@ class DagmanCreator(TaskAction):
             jobs = jobgroup.getJobs()
             splittingSummary.addJobs(jobs)
         splittingSummary.dump('splitting-summary.json')
-        filesForSched.append('splitting-summary.json')
 
+        # extract from tarball the executable to be passed to condor submit
+        with tarfile.open('TaskManagerRun.tar.gz',  mode='r:gz') as tf:
+            tf.extract('dag_bootstrap_startup.sh', path=os.getcwd())
+        # and add to the "code" tarbell the files created by TW
+        filesToAdd = ['site.ad.json', 'RunJobs.dag', 'Job.submit',
+                      'datadiscovery.pkl', 'taskinformation.pkl',
+                      'taskworkerconfig.pkl', 'splitting-summary.json']
+        if kw['task']['tm_input_dataset']:
+            filesToAdd = filesToAdd + ['input_dataset_lumis.json', 'input_dataset_duplicate_lumis.json']
+        addToGZippedTarfile(filesToAdd, 'TaskManagerRun.tar.gz')
+
+        # files to be transferred to remove WN's via Job.submmit. Add to the "code" tarball files created by TW
+        filesToAdd = ['run_and_lumis.tar.gz', 'input_files.tar.gz', 'input_args.json']
+        addToGZippedTarfile(filesToAdd, 'CMSRunAnalysis.tar.gz')
+
+        # files to be transferred to the scheduler by DagmanSubmitter (these will all be placed in InputFiles.tar.gz)
+        filesForSched = ['CMSRunAnalysis.tar.gz', 'TaskManagerRun.tar.gz']
+
+        # this creates InputFiles.tar.gz
         self.prepareTarballForSched(filesForSched, subdags)
 
         return jobSubmit, params, ["InputFiles.tar.gz"], splitterResult

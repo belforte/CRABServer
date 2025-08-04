@@ -222,6 +222,12 @@ echo "======== PROXY INFORMATION START at $(TZ=GMT date) ========"
 voms-proxy-info -all
 echo "======== PROXY INFORMATION FINISH at $(TZ=GMT date) ========"
 
+echo "======== Expand JobWrapper Tarball at $(TZ=GMT date) ========"
+tar xf CMSRunAnalysis.tar.gz
+ls
+echo "======== Expand JobWrapper Tarball completed ========"
+
+
 echo "======== CMSRunAnalysis.sh at $(TZ=GMT date) STARTING ========"
 time sh ./CMSRunAnalysis.sh "$@" --oneEventMode=$CRAB_oneEventMode
 EXIT_STATUS=$?

@@ -51,10 +51,10 @@ class SiteInfoResolver(TaskAction):
         self.logger.debug("Site blacklist: %s", list(siteBlacklist))
         if 'resubmit_site_whitelist' in kwargs['task'] and kwargs['task']['resubmit_site_whitelist']:
             resubmitSiteWhitelist = self._expandSites(kwargs['task']['resubmit_site_whitelist'])
-            kwargs['task']['resubmit_site_whitelist'] = resubmitSiteWhitelist
+            kwargs['task']['resubmit_site_whitelist'] = list(resubmitSiteWhitelist)
         if 'resubmit_site_blacklist' in kwargs['task'] and kwargs['task']['resubmit_site_blacklist']:
             resubmitSiteBlacklist = self._expandSites(kwargs['task']['resubmit_site_blacklist'])
-            kwargs['task']['resubmit_site_blacklist'] = resubmitSiteBlacklist
+            kwargs['task']['resubmit_site_blacklist'] = list(resubmitSiteBlacklist)
 
         if siteWhitelist & global_blacklist:
             msg = f"The following sites from the user site whitelist are blacklisted by the CRAB server: {list(siteWhitelist & global_blacklist)}."

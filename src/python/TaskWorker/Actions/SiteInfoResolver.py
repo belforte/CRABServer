@@ -49,10 +49,10 @@ class SiteInfoResolver(TaskAction):
         siteBlacklist = self._expandSites(kwargs['task']['tm_site_blacklist'])
         self.logger.debug("Site whitelist: %s", list(siteWhitelist))
         self.logger.debug("Site blacklist: %s", list(siteBlacklist))
-        if hasattr(kwargs['task'], 'resubmit_site_whitelist') and kwargs['task']['resubmit_site_whitelist']:
+        if 'resubmit_site_whitelist' in kwargs['task'] and kwargs['task']['resubmit_site_whitelist']:
             resubmitSiteWhitelist = self._expandSites(kwargs['task']['resubmit_site_whitelist'])
             kwargs['task']['resubmit_site_whitelist'] = resubmitSiteWhitelist
-        if hasattr(kwargs['task'], 'resubmit_site_blacklist') and kwargs['task']['resubmit_site_blacklist']:
+        if 'resubmit_site_blacklist' in kwargs['task'] and kwargs['task']['resubmit_site_blacklist']:
             resubmitSiteBlacklist = self._expandSites(kwargs['task']['resubmit_blacklist'])
             kwargs['task']['resubmit_site_blacklist'] = resubmitSiteBlacklist
 

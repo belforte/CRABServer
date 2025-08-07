@@ -53,7 +53,7 @@ class SiteInfoResolver(TaskAction):
             resubmitSiteWhitelist = self._expandSites(kwargs['task']['resubmit_site_whitelist'])
             kwargs['task']['resubmit_site_whitelist'] = resubmitSiteWhitelist
         if 'resubmit_site_blacklist' in kwargs['task'] and kwargs['task']['resubmit_site_blacklist']:
-            resubmitSiteBlacklist = self._expandSites(kwargs['task']['resubmit_blacklist'])
+            resubmitSiteBlacklist = self._expandSites(kwargs['task']['resubmit_site_blacklist'])
             kwargs['task']['resubmit_site_blacklist'] = resubmitSiteBlacklist
 
         if siteWhitelist & global_blacklist:

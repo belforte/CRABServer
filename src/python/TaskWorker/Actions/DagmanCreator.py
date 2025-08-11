@@ -1081,7 +1081,6 @@ class DagmanCreator(TaskAction):
             dagFileName = "RunJobs0.subdag"
         else:
             dagFileName = f"RunJobs{parentDag}.subdag"
-        argFileName = "input_args.json"
 
         ## Cache site information
         with open("site.ad.json", "w", encoding='utf-8') as fd:
@@ -1097,15 +1096,35 @@ class DagmanCreator(TaskAction):
 
         # list of input arguments needed for each jobs
         argdicts = self.prepareJobArguments(dagSpecs, kwargs['task'])
+        argFileName = "input_args.json"
         # save the input arguments to each job's CMSRunAnalysis.py in input_args.json file
-        if stage in ['processing', 'tail']:  # add to argument list from previous stage
+        if self.runningInTW:
+            # things are easy
+            with open(argFileName, 'w', encoding='utf-8') as fd:
+                json.dump(argdicts, fd)
+        else:
+            # in Processing or Tail step of automatic splitting
+            # need to add to argument list from previous stage
+            # in this case argFileName is inside the tarball, so
+            # will use a temp dir to expand, update, compress again
+            tmpDir = tempfile.mkdtemp()
+            with tarfile.open('CMSRunAnalysis.tar.gz') as tf:
+                tf.extractall(tmpDir)
+            spoolDir = os.getcwd()  # script is running in the SPOOL_DIR
+            os.chdir(tmpDir)
             with open(argFileName, 'r', encoding='utf-8') as fd:
                 oldArgs = json.load(fd)
             argdicts = oldArgs + argdicts
-        # no worry of overwriting, even in automatic splitting multiple DagmanCreator
-        # is executed inside PreDag which is wrapped with a lock
-        with open(argFileName, 'w', encoding='utf-8') as fd:
-            json.dump(argdicts, fd)
+            # no worry of overwriting, even in automatic splitting multiple DagmanCreator
+            # is executed inside PreDag which is wrapped with a lock
+            with open(argFileName, 'w', encoding='utf-8') as fd:
+                json.dump(argdicts, fd)
+            (_, tmpTar) = tempfile.mkstemp()
+            with tarfile.open(tmpTar, 'w:gz') as tf:
+                tf.add('.')
+            shutil.move(tmpTar, os.path.join(spoolDir, 'CMSRunAnalysis.tar.gz'))
+            os.chdir(spoolDir)
+            shutil.rmtree(tmpDir)
 
         # add maxidle, maxpost and faillimit to the object passed to DagmanSubmitter
         # first two be used in the DAG submission and the latter the PostJob

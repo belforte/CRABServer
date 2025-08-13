@@ -737,25 +737,6 @@ class DagmanCreator(TaskAction):
             with tarfile.open('input_files.tar.gz') as tf:
                 tf.extractall(inputFilesDir)
         # now add run_lumi and input_files from this DAG
-
-        ## Create a tarball with all the jobs lumi files.
-        if not self.runningInTW:
-            # in Processing or Tail step of automatic splitting
-            # need to add job specific info to the one from previous stage
-            # which is inside the tarball CMSRunAnalysis.tar.gx
-            # so will use a temp dir to expand, update, compress again
-            with tarfile.open('CMSRunAnalysis.tar.gz') as tf:
-                tf.extractall(tarballDir)
-        # create temp dirs where to build run_and_lumis and input_files
-        runAndLumisDir = tempfile.mkdtemp()
-        inputFilesDir = tempfile.mkdtemp()
-        if not self.runningInTW:
-            # pre-populate those directories with files from previous DagmanCreator steps
-            os.chdir(tarballDir)
-            with tarfile.open('run_and_lumis.tar.gz') as tf:
-                tf.extractall(runAndLumisDir)
-            with tarfile.open('input_files.tar.gz') as tf:
-                tf.extractall(inputFilesDir)
         # add current runs_and_lumis and input_files lists in the temp directories
         for dagSpec in dagSpecs:
             # run and lumis, one file for each job in standard lumi format
@@ -848,9 +829,9 @@ class DagmanCreator(TaskAction):
          in the SPOOL_DIR when the task is initially bootstrapped in dag_bootstrap_startup.sh
         """
         # must handle the fact that this is called with different arguments in
-        # DagmanCreatore.executeInternal vs. PreDag. In particular PreDag pass
+        # DagmanCreatore.executeInternal vs. PreDag. In particular PreDag passes
         # the task dictionay as a named argument, while in DagmanCreator it comes via self
-        if not hasattr(self, 'task'):
+        if not self.task:
             self.task = kwargs['task']
 
         # SB should have a createDagSpecs() method to move away a lot of following code

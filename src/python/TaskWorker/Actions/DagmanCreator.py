@@ -782,7 +782,7 @@ class DagmanCreator(TaskAction):
         # last effort, if runnin in the AP create new tarball and replace old one
         if not self.runningInTW:
             with tarfile.open(os.path.join(workingDir, 'CMSRunAnalysis.tar.gz'), 'w:gz') as tf:
-                tf.add(tarballDir)
+                tf.add(tarballDir, arcname='')
         os.chdir(workingDir)
         shutil.rmtree(tarballDir)
 

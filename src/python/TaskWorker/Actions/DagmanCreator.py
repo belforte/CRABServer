@@ -720,6 +720,11 @@ class DagmanCreator(TaskAction):
     def createOrUpdateFilesForJobWrapper(self, dagSpecs):
         """
         deal with files to be possibly changed inside CMSRunAnalysis.tar.gz
+        in case createSubdag is called on the AP by PreDag (automatic splitting).
+        If that tarball exists already, expand it and update files in there
+        (which can be themselves other tarballs), tar it again and copy to
+        cwd. Otherwise simply create new files and copy them to cwd. When running
+        in TW the CMSRunAnalysis.tar.gz will be created later on.
         """
         workingDir = os.getcwd()  # remember current cwd: tmp dir in TW, SPOOL_DIR in the AP
         tarballDir = tempfile.mkdtemp()
@@ -767,7 +772,7 @@ class DagmanCreator(TaskAction):
         else:
             # keep them here in order to build new tarball
             pass
-        # now list of input arguments needed for each jobs
+        # now list of input arguments needed for each jobs, again prepare it in the temp dir
         argdicts = self.prepareJobArguments(dagSpecs)
         argFileName = "input_args.json"
         if not self.runningInTW:  # add to argument list from previous stage
@@ -778,9 +783,10 @@ class DagmanCreator(TaskAction):
         with open(argFileName, 'w', encoding='utf-8') as fd:
             json.dump(argdicts, fd)
         if self.runningInTW:
+            # simply move file to working dir
             shutil.copy(argFileName, workingDir)
-        # last effort, if runnin in the AP create new tarball and replace old one
-        if not self.runningInTW:
+        else:  # i.e. not running in TW but in the AP
+            # last effort, create new job wrapper tarball and replace old one
             with tarfile.open(os.path.join(workingDir, 'CMSRunAnalysis.tar.gz'), 'w:gz') as tf:
                 tf.add(tarballDir, arcname='')
         os.chdir(workingDir)

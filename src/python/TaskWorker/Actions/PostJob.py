@@ -1869,7 +1869,9 @@ class PostJob():
         try:
             tmpdir = tempfile.mkdtemp()
             fn = "job_lumis_{0}.json".format(self.job_id)
-            with tarfile.open("run_and_lumis.tar.gz") as f:
+            with tarfile.open("CMSRunAnalysis.tar.gz") as f:
+                f.extract('run_and_lumis.tar.gz', path=tmpdir)
+            with tarfile.open(os.path.join(tmpdir, 'run_and_lumis.tar.gz')) as f:
                 f.extract(fn, path=tmpdir)
             with open(os.path.join(tmpdir, fn)) as fd:
                 injson = json.load(fd)

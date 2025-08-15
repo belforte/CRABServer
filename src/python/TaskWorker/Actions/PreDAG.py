@@ -314,7 +314,7 @@ class PreDAG():
             creator = DagmanCreator(config, crabserver=None, rucioClient=rucioClient)
             with config.TaskWorker.envForCMSWEB:
                 creator.createSubdag(splitResult.result, task=task, parent=parent, stage=self.stage)
-            self.submitSubdag('RunJobs{0}.subdag'.format(self.prefix),
+            self.submitSubdag(f"RunJobs{self.prefix}.subdag",
                               getattr(config.TaskWorker, 'maxIdle', MAX_IDLE_JOBS),
                               getattr(config.TaskWorker, 'maxPost', MAX_POST_JOBS),
                               self.stage)
@@ -360,11 +360,12 @@ class PreDAG():
                 self.logger.info("Adding missing lumis from job %s", missingFile)
                 missing = missing + LumiList(compactList=literal_eval(fd.read()))
         for failedId in failed:
-            f = None
             tmpdir = tempfile.mkdtemp()
-            with tarfile.open("run_and_lumis.tar.gz") as f:
+            with tarfile.open('CMSRunAnalysis.tar.gz') as tf:
+                tf.extract('run_and_lumis.tar.gz', path=tmpdir)
+            with tarfile.open(os.path.join(tmpdir, 'run_and_lumis.tar.gz')) as tf:
                 fn = f"job_lumis_{failedId}.json"
-                f.extract(fn, path=tmpdir)
+                tf.extract(fn, path=tmpdir)
                 with open(os.path.join(tmpdir, fn), 'r', encoding='utf-8') as fd:
                     injson = json.load(fd)
                     missing = missing + LumiList(compactList=injson)

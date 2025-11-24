@@ -75,6 +75,7 @@ SCRIPT DEFER 4 300 PRE Job{count}SubJobs dag_bootstrap.sh PREDAG {stage} {comple
 # If nothing is needed, use and empty string. A file must be there in order not to break our code.
 DAGMAN_CONFIG = """
 DAGMAN_VERBOSITY=2
+DAGMAN_REMOVE_NODE_JOBS=False
 """
 
 

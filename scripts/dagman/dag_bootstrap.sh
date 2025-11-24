@@ -143,7 +143,7 @@ echo "Printing current environment to file ..."
 srcname=$0
 env > ${srcname%.sh}.env
 
-env
+#env
 #if [ "X$_CONDOR_JOB_AD" != "X" ]; then
 #  echo "Printing current job ad..."
 #  cat $_CONDOR_JOB_AD

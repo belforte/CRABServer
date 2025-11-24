@@ -10,7 +10,7 @@
 
 set -o pipefail
 {
-set -x
+#set -x
 echo "Beginning dag_bootstrap.sh (stdout)"
 echo "Beginning dag_bootstrap.sh (stderr)" 1>&2
 
@@ -138,16 +138,16 @@ export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
 export HOSTNAME
 
 export PYTHONUNBUFFERED=1
-echo "Printing current environment..."
+echo "Printing current environment to file ..."
 
 srcname=$0
 env > ${srcname%.sh}.env
 
 env
-if [ "X$_CONDOR_JOB_AD" != "X" ]; then
-  echo "Printing current job ad..."
-  cat $_CONDOR_JOB_AD
-fi
+#if [ "X$_CONDOR_JOB_AD" != "X" ]; then
+#  echo "Printing current job ad..."
+#  cat $_CONDOR_JOB_AD
+#fi
 echo "Now running the job in `pwd`..."
 exec nice -n 19 python3 -m TaskWorker.TaskManagerBootstrap "$@"
 } 2>&1 | tee dag_bootstrap.out

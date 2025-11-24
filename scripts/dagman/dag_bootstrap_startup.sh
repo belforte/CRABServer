@@ -7,9 +7,9 @@ echo "As user: $(whoami)"
 set -x
 
 # Touch a bunch of files to make sure job doesn't go on hold for missing files
-for FILE in $1.dagman.out $1.config RunJobs.dag.dagman.out dbs_discovery.err dbs_discovery.out job_splitting.err job_splitting.out; do
-    touch $FILE
-done
+#for FILE in $1.dagman.out $1.config RunJobs.dag.dagman.out dbs_discovery.err dbs_discovery.out job_splitting.err job_splitting.out; do
+#    touch $FILE
+#done
 
 export PATH="/usr/local/bin:/bin:/usr/bin:/usr/bin:$PATH"
 export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH

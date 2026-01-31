@@ -30,7 +30,7 @@ import TaskWorker.DataObjects.Result
 from TaskWorker.Actions.TaskAction import TaskAction
 from TaskWorker.Actions.Splitter import SplittingSummary
 from TaskWorker.WorkerExceptions import TaskWorkerException, SubmissionRefusedException
-from TaskWorker.WorkerUtilities import getHighPrioUsersFromCRIC
+from TaskWorker.WorkerUtilities import MapUsersToGroups
 from RucioUtils import getWritePFN
 from CMSGroupMapper import map_user_to_groups
 
@@ -411,10 +411,24 @@ class DagmanCreator(TaskAction):
         jobSubmit['My.CRAB_RequestedCores'] = str(task['tm_numcores'])
         jobSubmit['My.MaxWallTimeMins'] = str(task['tm_maxjobruntime'])  # this will be used in gWms matching
         jobSubmit['My.MaxWallTimeMinsRun'] = str(task['tm_maxjobruntime'])  # this will be used in PeriodicRemove
-        ## Add group information (local groups in SITECONF via CMSGroupMapper, VOMS groups via task info in DB)
+
         groups = set.union(map_user_to_groups(task['tm_username']), task['user_groups'])
         groups = ','.join(groups)  # from the set {'g1','g2'...,'gN'} to the string 'g1,g2,..gN'
         jobSubmit['My.CMSGroups'] = classad.quote(groups)
+        ## Add group information (local groups in SITECONF via CMSGroupMapper, VOMS groups via task info in DB)
+        mapUsers = MapUsersToGroups(config=self.config.TaskWorker, logger=self.logger)
+        user = task['tm_username']
+        sites = mapUsers.getSitesForUser(user)
+        self.logger.info("list of sites with local_users : %s", sites)
+        self.logger.info("use is HighPrio: %s", mapUsers.isUserInHighPriorityGroup(user))
+        groups = set.union(task['user_groups'], sites)
+        groups = ','.join(groups)  # from the set {'g1','g2'...,'gN'} to the string 'g1,g2,..gN'
+        jobSubmit['My.CMSGroups'] = classad.quote(groups)
+        if mapUsers.isUserInHighPriorityGroup(user):
+            jobSubmit['accounting_group'] = 'highprio'
+        else:
+            jobSubmit['accounting_group'] = 'analysis'
+        jobSubmit['accounting_group_user'] = task['tm_username']
 
         # do we really need this ?  i.e. or can replace it with GLIDEIN_CMSSite where it is used in the code ?
         jobSubmit['My.JOBGLIDEIN_CMSSite'] = classad.quote('$$([ifThenElse(GLIDEIN_CMSSite is undefined, "Unknown", GLIDEIN_CMSSite)])')
@@ -422,14 +436,6 @@ class DagmanCreator(TaskAction):
         #
         # now actual HTC Job Submission commands, here right hand side can be simply strings
         #
-        hiPrioUsers = getHighPrioUsersFromCRIC(cert=self.config.TaskWorker.cmscert,
-                                               key=self.config.TaskWorker.cmskey,
-                                               logger=self.logger)
-        if  task['tm_username'] in hiPrioUsers:
-            jobSubmit['accounting_group'] = 'highprio'
-        else:
-            jobSubmit['accounting_group'] = 'analysis'
-        jobSubmit['accounting_group_user'] = task['tm_username']
 
         jobSubmit['job_ad_information_attrs'] = "MATCH_EXP_JOBGLIDEIN_CMSSite, JOBGLIDEIN_CMSSite, RemoteSysCpu, RemoteUserCpu"
 

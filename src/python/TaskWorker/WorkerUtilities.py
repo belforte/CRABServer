@@ -4,8 +4,11 @@ Common functions to be reused around TW and Publisher
 
 import logging
 import functools
-import time
+import os
 import random
+import re
+import time
+import datetime
 
 from http.client import HTTPException
 from urllib.parse import urlencode
@@ -147,46 +150,156 @@ class CRICService(CRIC):
         """ maps PhexedNodeNames (i.e. RSE's) to ProcessingSiteNames (i.e. sites) """
         return super().PNNstoPSNs(*args, **kwargs)
 
+globalCashedUserMap = {}
+globalCacheExpireTime = 0
 
-def getHighPrioUsersFromCRIC(cert, key, logger=None):
-    """
-    get the list of high priority users from CRIC with retries
-    arguments:
-      cert,key : string : absolute path name for PEM file to use for authentication
-      logger : a logging.logger object
-    """
+class MapUsersToGroups():
+    """ prepares a map from users to local groups or high priority status """
+    def __init__(self, config, logger):
+        """
+        requires a config.TaskWorker object where cmscert and cmskey are defined
+                """
+        self.config = config
+        self.logger = logger
 
-    cricGroup = 'CMS_CRAB_HighPrioUsers'
-    cricUrl = f"https://cms-cric.cern.ch//api/accounts/group/query/?json&name={cricGroup}"
-    capath = '/etc/grid-security/certificates'
+    def cacheMap(self):
+        """
+        creates a cachedUserMap dictionary with mapping of user name to local sites
+        or high priority groups, format is
+        {{'username': {'sites': set(site1, site2,...), 'hiPrio': True/False (boolean)}}, ... }
+        e.g.
+        {'belforte': {'sites': ('T3_US_FNALLPC'), 'hiPrio': False}},
+        """
 
-    # make requests less verbose
-    # can not use suppressExternalServiceLogging above because it requires self.logger
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
+        global globalCashedUserMap
+        global globalCacheExpireTime
+        self.logger.info("===== caching user map at %s", datetime.datetime.now())
+        cache = {}
+        # start with mapping from users to local groups
+        usersToSites = self.cacheUsersToSites()
+        if not usersToSites:
+            # caching failed, retry soonish
+            globalCacheExpireTime = time.time() + 60
+            return
+        for user in usersToSites:
+            cache[user] = {}
+            cache[user]['sites'] = usersToSites[user]
+            cache[user]['hiPrio'] = False
 
-    nRetries = 4
-    for i in range(nRetries + 1):
-        try:
-            # make HTTP GET
-            r = requests.get(url=cricUrl, cert=(cert, key), verify=capath, timeout=10)
-            # get JSON output and parse it
-            highPrioUsers = []
-            for user in r.json()[cricGroup]['users']:
-                highPrioUsers.append(user['login'])
-        except Exception as ex:  # pylint: disable=broad-except
-            if i < nRetries:
-                sleeptime = 20 * (i + 1) + random.randint(-10, 10)
-                msg = f"Sleeping {sleeptime} seconds after HTTP error. Error details:\n{ex}"
-                logger.debug(msg)
-                time.sleep(sleeptime)
-            else:
-                # this was the last retry
-                msg = "Error when getting the high priority users list from CRIC." \
-                      " Will ignore the high priority list and continue normally." \
-                      f" Error reason:\n{ex}"
-                logger.error(msg)
-                highPrioUsers = []
-                break
+        # then add highprio info
+        highPriorityUsers = self.getHighPrioUsersFromCRIC()
+        for user in highPriorityUsers:
+            if not user in cache:
+                cache[user]['sites'] = set()
+            cache[user]['hiPrio'] = True
+
+        globalCashedUserMap = cache
+        globalCacheExpireTime = time.time() + 15*60
+        humanTime =  datetime.datetime.fromtimestamp(globalCacheExpireTime).strftime('%H:%M:%S')
+        self.logger.info("===== new cache expire time: %s", humanTime)
+
+    def getSitesForUser(self, user):
+        global globalCashedUserMap
+        global globalCacheExpireTime
+        if time.time() > globalCacheExpireTime:
+            self.cacheMap()
+        if user in globalCashedUserMap:
+            return globalCashedUserMap[user]['sites']
         else:
-            break
-    return highPrioUsers
+            return set()
+
+    def isUserInHighPriorityGroup(self, user):
+        """
+        returns True/False
+        """
+        global globalCashedUserMap
+        global globalCacheExpireTime
+        if time.time() > globalCacheExpireTime:
+            self.cacheMap()
+        if user in globalCashedUserMap:
+            return globalCashedUserMap[user]['hiPrio']
+        else:
+            return False
+
+    def cacheUsersToSites(self):
+        """ Cache the entries in the variuos local-users.txt files
+            Those entries are saved in dictionary with this
+            format:
+
+            {'username1': set(['T3_IT_Bologna']),
+             'username2': set(['T2_US_Nebraska']),
+             'username3': set(['T2_ES_CIEMAT', 'T3_IT_Bologna']),
+             'userdn1': set(['T2_ES_CIEMAT']),
+             'userfqan: set(['T2_ES_CIEMAT', 'T3_IT_Bologna'])
+        """
+        # adapted from CMSGroupMapper.cache_users originally created by B.Bockelman
+
+        usersToSites = {}
+        base_dir = '/cvmfs/cms.cern.ch/SITECONF'
+        user_re = re.compile(r'[-_A-Za-z0-9.]+')
+        sites = None
+        try:
+            if os.path.isdir(base_dir):
+                sites = os.listdir(base_dir)
+        except OSError as ose:
+            self.logger.warning("Cannot list SITECONF directories in cvmfs:" + str(ose))
+        if not sites:
+            return {}
+        for siteName in sites:
+            if (siteName == 'local'):
+                continue
+            full_path = os.path.join(base_dir, siteName, 'GlideinConfig', 'local-users.txt')
+            if os.path.isfile(full_path):
+                try:
+                    with open(full_path) as fd:
+                        for user in fd:
+                            user = user.strip()
+                            if user_re.match(user):
+                                group_set = usersToSites.setdefault(user, set())
+                                group_set.add(siteName)
+                except OSError as ose:
+                    self.logger.errror("Cannot list SITECONF directories in cvmfs:" + str(ose))
+                    raise
+        return usersToSites
+
+    @suppressExternalServiceLogging
+    def getHighPrioUsersFromCRIC(self):
+        """
+        get the list of high priority users from CRIC with retries
+        arguments:
+          cert,key : string : absolute path name for PEM file to use for authentication
+          logger : a logging.logger object
+        """
+
+        cricGroup = 'CMS_CRAB_HighPrioUsers'
+        cricUrl = f"https://cms-cric.cern.ch//api/accounts/group/query/?json&name={cricGroup}"
+        cert = self.config.cmscert
+        key = self.config.cmskey
+        capath = '/etc/grid-security/certificates'
+
+        nRetries = 4
+        for i in range(nRetries + 1):
+            try:
+                # make HTTP GET
+                r = requests.get(url=cricUrl, cert=(cert, key), verify=capath, timeout=10)
+                # get JSON output and parse it
+                highPrioUsers = []
+                for user in r.json()[cricGroup]['users']:
+                    highPrioUsers.append(user['login'])
+            except Exception as ex:  # pylint: disable=broad-except
+                if i < nRetries:
+                    sleeptime = 20 * (i + 1) + random.randint(-10, 10)
+                    msg = f"Sleeping {sleeptime} seconds after HTTP error. Error details:\n{ex}"
+                    self.logger.debug(msg)
+                    time.sleep(sleeptime)
+                else:
+                    # this was the last retry
+                    msg = "Error when getting the high priority users list from CRIC." \
+                          " Will ignore the high priority list and continue normally." \
+                          f" Error reason:\n{ex}"
+                    self.logger.error(msg)
+                    highPrioUsers = []
+                    break
+            else:
+                break
+        return highPrioUsers

@@ -20,7 +20,7 @@ from RESTInteractions import CRABRest
 from WMCore.Services.CRIC.CRIC import CRIC
 from TaskWorker.WorkerExceptions import ConfigException
 
-globalCashedUserMap = {}
+globalCachedUserMap = {}
 globalCacheExpireTime = 0
 
 
@@ -157,7 +157,7 @@ class CRICService(CRIC):
 class MapUsersToGroups():
     """ prepares a map from users to local groups or high priority status """
 
-    globalCashedUserMap = {}
+    globalCachedUserMap = {}
     globalCacheExpireTime = 0
 
     def __init__(self, config, logger):
@@ -168,7 +168,7 @@ class MapUsersToGroups():
         self.logger = logger
         self.logger.info("===== MapsUsersToGroups __init__ called")
         self.logger.info("===== globalCacheExpireTime is %s", globalCacheExpireTime)
-        self.logger.info("===== globalCashedUserMap is %s", globalCashedUserMap)
+        self.logger.info("===== globalCachedUserMap is %s", globalCachedUserMap)
 
     def cacheMap(self):
         """
@@ -199,7 +199,7 @@ class MapUsersToGroups():
                 cache[user]['sites'] = set()
             cache[user]['hiPrio'] = True
 
-        globalCashedUserMap = cache
+        globalCachedUserMap = cache
         globalCacheExpireTime = time.time() + 15*60
         humanTime =  datetime.datetime.fromtimestamp(globalCacheExpireTime).strftime('%H:%M:%S')
         self.logger.info("===== new cache expire time: %s", humanTime)
@@ -211,8 +211,8 @@ class MapUsersToGroups():
 
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
-        if user in globalCashedUserMap:
-            return globalCashedUserMap[user]['sites']
+        if user in globalCachedUserMap:
+            return globalCachedUserMap[user]['sites']
         else:
             return set()
 
@@ -225,8 +225,8 @@ class MapUsersToGroups():
         self.logger.info(f"=====  cached map is {globalCachedUserMap}")
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
-        if user in globalCashedUserMap:
-            return globalCashedUserMap[user]['hiPrio']
+        if user in globalCachedUserMap:
+            return globalCachedUserMap[user]['hiPrio']
         else:
             return False
 

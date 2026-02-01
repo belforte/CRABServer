@@ -207,7 +207,7 @@ class MapUsersToGroups():
     def getSitesForUser(self, user):
         self.logger.info("===== in getSitesForUsers")
         self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
-        self.loggin.info(f"=====  cached map is {globalCachedUserMap}")
+        self.logger.info(f"=====  cached map is {globalCachedUserMap}")
 
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
@@ -222,7 +222,7 @@ class MapUsersToGroups():
         """
         self.logger.info("===== in isUserInHighPriorityGroup")
         self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
-        self.loggin.info(f"=====  cached map is {globalCachedUserMap}")
+        self.logger.info(f"=====  cached map is {globalCachedUserMap}")
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
         if user in globalCashedUserMap:

@@ -20,6 +20,10 @@ from RESTInteractions import CRABRest
 from WMCore.Services.CRIC.CRIC import CRIC
 from TaskWorker.WorkerExceptions import ConfigException
 
+globalCashedUserMap = {}
+globalCacheExpireTime = 0
+
+
 def getCrabserver(restConfig=None, agentName='crabtest', logger=None):
     """
     given a configuration object which contains instance, cert and key
@@ -150,17 +154,21 @@ class CRICService(CRIC):
         """ maps PhexedNodeNames (i.e. RSE's) to ProcessingSiteNames (i.e. sites) """
         return super().PNNstoPSNs(*args, **kwargs)
 
-globalCashedUserMap = {}
-globalCacheExpireTime = 0
-
 class MapUsersToGroups():
     """ prepares a map from users to local groups or high priority status """
+
+    globalCashedUserMap = {}
+    globalCacheExpireTime = 0
+
     def __init__(self, config, logger):
         """
         requires a config.TaskWorker object where cmscert and cmskey are defined
                 """
         self.config = config
         self.logger = logger
+        self.logger.info("===== MapsUsersToGroups __init__ called")
+        self.logger.info("===== globalCacheExpireTime is %s", globalCacheExpireTime)
+        self.logger.info("===== globalCashedUserMap is %s", globalCashedUserMap)
 
     def cacheMap(self):
         """
@@ -171,8 +179,6 @@ class MapUsersToGroups():
         {'belforte': {'sites': ('T3_US_FNALLPC'), 'hiPrio': False}},
         """
 
-        global globalCashedUserMap
-        global globalCacheExpireTime
         self.logger.info("===== caching user map at %s", datetime.datetime.now())
         cache = {}
         # start with mapping from users to local groups
@@ -199,8 +205,10 @@ class MapUsersToGroups():
         self.logger.info("===== new cache expire time: %s", humanTime)
 
     def getSitesForUser(self, user):
-        global globalCashedUserMap
-        global globalCacheExpireTime
+        self.logger.info("===== in getSitesForUsers")
+        self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
+        self.loggin.info(f"=====  cached map is {globalCachedUserMap}")
+
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
         if user in globalCashedUserMap:
@@ -212,8 +220,9 @@ class MapUsersToGroups():
         """
         returns True/False
         """
-        global globalCashedUserMap
-        global globalCacheExpireTime
+        self.logger.info("===== in isUserInHighPriorityGroup")
+        self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
+        self.loggin.info(f"=====  cached map is {globalCachedUserMap}")
         if time.time() > globalCacheExpireTime:
             self.cacheMap()
         if user in globalCashedUserMap:

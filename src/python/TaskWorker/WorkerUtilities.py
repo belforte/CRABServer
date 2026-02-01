@@ -167,8 +167,8 @@ class MapUsersToGroups():
         self.config = config
         self.logger = logger
         self.logger.info("===== MapsUsersToGroups __init__ called")
-        self.logger.info("===== globalCacheExpireTime is %s", globalCacheExpireTime)
-        self.logger.info("===== globalCachedUserMap is %s", globalCachedUserMap)
+        self.logger.info("===== globalCacheExpireTime is %s", MapUsersToGroups.globalCacheExpireTime)
+        self.logger.info("===== globalCachedUserMap is %s", MapUsersToGroups.globalCachedUserMap)
 
     def cacheMap(self):
         """
@@ -185,7 +185,7 @@ class MapUsersToGroups():
         usersToSites = self.cacheUsersToSites()
         if not usersToSites:
             # caching failed, retry soonish
-            globalCacheExpireTime = time.time() + 60
+            MapUsersToGroups.globalCacheExpireTime = time.time() + 60
             return
         for user in usersToSites:
             cache[user] = {}
@@ -199,20 +199,20 @@ class MapUsersToGroups():
                 cache[user]['sites'] = set()
             cache[user]['hiPrio'] = True
 
-        globalCachedUserMap = cache
-        globalCacheExpireTime = time.time() + 15*60
-        humanTime =  datetime.datetime.fromtimestamp(globalCacheExpireTime).strftime('%H:%M:%S')
+        MapUsersToGroups.globalCachedUserMap = cache
+        MapUsersToGroups.globalCacheExpireTime = time.time() + 15*60
+        humanTime =  datetime.datetime.fromtimestamp(MapUsersToGroups.globalCacheExpireTime).strftime('%H:%M:%S')
         self.logger.info("===== new cache expire time: %s", humanTime)
 
     def getSitesForUser(self, user):
         self.logger.info("===== in getSitesForUsers")
-        self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
-        self.logger.info(f"=====  cached map is {globalCachedUserMap}")
+        self.logger.info(f"=====  cache expire time is {MapUsersToGroups.globalCacheExpireTime}")
+        self.logger.info(f"=====  cached map is {MapUsersToGroups.globalCachedUserMap}")
 
-        if time.time() > globalCacheExpireTime:
+        if time.time() > MapUsersToGroups.globalCacheExpireTime:
             self.cacheMap()
-        if user in globalCachedUserMap:
-            return globalCachedUserMap[user]['sites']
+        if user in MapUsersToGroups.globalCachedUserMap:
+            return MapUsersToGroups.globalCachedUserMap[user]['sites']
         else:
             return set()
 
@@ -221,12 +221,12 @@ class MapUsersToGroups():
         returns True/False
         """
         self.logger.info("===== in isUserInHighPriorityGroup")
-        self.logger.info(f"=====  cache expire time is {globalCacheExpireTime}")
-        self.logger.info(f"=====  cached map is {globalCachedUserMap}")
-        if time.time() > globalCacheExpireTime:
+        self.logger.info(f"=====  cache expire time is {MapUsersToGroups.globalCacheExpireTime}")
+        self.logger.info(f"=====  cached map is {MapUsersToGroups.globalCachedUserMap}")
+        if time.time() > MapUsersToGroups.globalCacheExpireTime:
             self.cacheMap()
-        if user in globalCachedUserMap:
-            return globalCachedUserMap[user]['hiPrio']
+        if user in MapUsersToGroups.globalCachedUserMap:
+            return MapUsersToGroups.globalCachedUserMap[user]['hiPrio']
         else:
             return False
 

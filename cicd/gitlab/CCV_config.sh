@@ -11,14 +11,16 @@ echo "(DEBUG) REST_Instance: ${REST_Instance}"
 echo "(DEBUG) CMSSW_release: ${CMSSW_release}"
 echo "(DEBUG) Client_Configuration_Validation: ${Client_Configuration_Validation}"
 
-# always run inside ./workdir
+# always run inside ./workdir Use a unique workdir for each script in case of multiple
+# pipelines/tests running in paralled
 export ROOT_DIR="${PWD}"
-export WORK_DIR="${PWD}/workdir"
+export WORK_DIR="${PWD}/workdir_${CI_PIPELINE_ID}_${CMSSW_release}"
 if [ ! -d "$WORK_DIR" ]; then
   mkdir -p "$WORK_DIR"
-  echo "(DEBUG) workdir was recreated"
+  echo "(DEBUG) workdir was created"
 fi
 pushd "${WORK_DIR}"
+
 
 # Get configuration from CMSSW_release
 CONFIG_LINE="$(grep "CMSSW_release=${CMSSW_release};" "${ROOT_DIR}"/test/testingConfigs)"

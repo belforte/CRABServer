@@ -28,7 +28,7 @@ source "${ROOT_DIR}/cicd/gitlab/setupCRABClient.sh"
 # above command sets $CMSSW_RELEASE_BASE/src as cwd, use that to run crab commands for tests
 # so not to mess with tests for other CMSSW versions which may be running concurrently in $ROOT_DIR
 # and use same $WORK_DIR
-python ${ROOT_DIR}/test/makeTests.py
+python3 ${ROOT_DIR}/test/makeTests.py
 
 # Ensure these 3 files exist, even if empty, to avoid spurious errors
 touch ${WORK_DIR}/successful_tests_${CI_PIPELINE_ID}_${CMSSW_release}

@@ -27,10 +27,10 @@ echo "(DEBUG) Check_Publication_Status: ${Check_Publication_Status}"
 echo "(DEBUG) CI_PIPELINE_ID: ${CI_PIPELINE_ID}"
 
 # always run inside ./workdir
-export ROOT_DIR="$PWD"
-export WORK_DIR="$PWD/workdir_${CI_PIPELINE_ID}_${CMSSW_release}"
-mkdir -p workdir
-pushd "${WORK_DIR}"
+export ROOT_DIR=$PWD
+export WORK_DIR=${PWD}/workdir_${CI_PIPELINE_ID}_${CMSSW_release}
+mkdir -p $WORK_DIR
+pushd ${WORK_DIR}
 
 # Get configuration from CMSSW_release
 CONFIG_LINE="$(grep "CMSSW_release=${CMSSW_release};" "${ROOT_DIR}"/test/testingConfigs)"

@@ -54,18 +54,18 @@ immediateCheck(){
 #Run immediate check on tasks submitted for Client_Configuration_Validation testing
 #Save results to failed_CCV_tests and successful_CCV_tests files
 
- project_dir="/tmp/crabTestConfig"
- mkdir -p "${project_dir}"  # Ensure project_dir exists
- touch "${WORK_DIR}/successful_CCV_tests"
- touch "${WORK_DIR}/failed_CCV_tests"
+ #project_dir="/tmp/crabTestConfig"
+ #mkdir -p "${project_dir}"  # Ensure project_dir exists
+ touch "${WORK_DIR}/successfully_submitted_CCV_tests"
+ touch "${WORK_DIR}/failed_to_submit_CCV_tests"
  for task in ${tasksToCheck};
  do
      echo -e "\nRunning immediate test on task: ${task}"
      test_to_execute=`echo "${task}" | grep -oP '(?<=_crab_).*(?=)'`
-     task_dir=${project_dir}/crab_${test_to_execute}
+     task_dir=${WORK_DIR}/crab_${test_to_execute}
      bash -x ${test_to_execute}-testSubmit.sh ${task_dir} && \
-       echo ${test_to_execute}-testSubmit.sh ${task_dir} - $? >> ${WORK_DIR}/successful_CCV_tests || \
-       echo ${test_to_execute}-testSubmit.sh ${task_dir} - $? >> ${WORK_DIR}/failed_CCV_tests
+       echo ${test_to_execute}-testSubmit.sh ${task_dir} - $? >> ${WORK_DIR}/successfully_submitted_CCV_tests || \
+       echo ${test_to_execute}-testSubmit.sh ${task_dir} - $? >> ${WORK_DIR}/failed_to_submit_CCV_tests
  done
 }
 
@@ -89,7 +89,7 @@ killAfterFailure(){
 
 if [ "${Client_Validation_Suite}" = true ]; then
     echo -e "\nStarting task submission for Client Validation testing.\n"
-    pushd "${ROOT_DIR}/test/clientValidationTasks/"
+    pushd "${WORK_DIR}/test/clientValidationTasks/"
     filesToSubmit=`find . -type f -name '*.py' ! -name '*pset*'`
     submitTasks "${filesToSubmit}" "CV"
     cd ${WORK_DIR}

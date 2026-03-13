@@ -131,7 +131,7 @@ config = Configuration()
 
 config.section_('General')
 config.General.instance = 'REST_Instance'
-config.General.workArea = 'ROOT_DIR'
+config.General.workArea = os.getenv('WORK_DIR', os.getcwd())
 config.General.requestName = REQUESTNAME
 
 config.section_('JobType')

@@ -150,12 +150,12 @@ writeValidationScript(testName=name, validationScript=validationScript)
 # inputFiles
 name = 'inputFiles'
 inFile1 = '/etc/hosts'
-inFile2 = '/etc/centos-release'
+inFile2 = '/etc/os-release'
 changeDict = {'param': name, 'section': 'JobType', 'value': [inFile1, inFile2]}
 confChangesList = [changeDict]
 testSubmitScript = """
 lookInTarFor "^hosts" ${workDir}/inputs/*default.tgz || echo "inputFiles: Retrieval failure in Tarlookup of hosts"
-lookInTarFor "^centos-release" ${workDir}/inputs/*default.tgz || echo "inputFiles: Retrieval failure in Tarlookup of centos-release"
+lookInTarFor "^os-release" ${workDir}/inputs/*default.tgz || echo "inputFiles: Retrieval failure in Tarlookup of os-release"
 """
 validationScript = """
 checkStatus ${taskName} SUBMITTED

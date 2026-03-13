@@ -1,3 +1,10 @@
+#! /bin/bash
+# This script takes task names from submitted_tasks file and executes tests on each task name.
+# 3 files are produced
+#  1. successful_tests: tests that returned exit code 0;
+#  2. retry_tests: tests that returned exit code 2, meaning test should be retried again later;
+#  3. failed_tests: tests that returned exit code not equal to 0 or 2, i.e. test failed.
+
 echo "Running clientConfigurationValidation.sh"
 set -euo pipefail
 
@@ -16,18 +23,10 @@ echo "(debug) WORK_DIR=${WORK_DIR}"
 echo "(debug) X509_USER_PROXY=${X509_USER_PROXY}"
 export PROXY=$X509_USER_PROXY  # for use in validation scripts
 
-#Script takes task names from submitted_tasks file and executes tests on each task name. 
-#3 files are produced:
-# 1. successful_tests: tests that returned exit code 0;
-# 2. retry_tests: tests that returned exit code 2, meaning test should be retried again later;
-# 3. failed_tests: tests that returned exit code not equal to 0 or 2, i.e. test failed.
-#Script is used in Jenkins job CRABServer_ClientConfigurationValidation.
-
 # Setup CRABClient
 source "${ROOT_DIR}/cicd/gitlab/setupCRABClient.sh"
 # above command sets $CMSSW_RELEASE_BASE/src as cwd, use that to run crab commands for tests
-# so not to mess with tests for other CMSSW versions which may be running concurrently in $ROOT_DIR
-# and use same $WORK_DIR
+# to keep $WORK_DiR clean with only the test results
 python3 ${ROOT_DIR}/test/makeTests.py
 
 # Ensure these 3 files exist, even if empty, to avoid spurious errors
@@ -82,14 +81,17 @@ if [ -f "${WORK_DIR}/submitted_tasks_CCV" ]; then
   echo "==== SUCCESSFUL TESTS "
   echo ""
   cat  ${WORK_DIR}/successful_tests | cut -d ' ' -f 2 || true
+  if [ ! -s ${WORK_DIR}/successful_tests ]; then echo "--- None ---"; fi
   echo "======================================================="
   echo "==== TESTS TO BE RUN AGAIN "
   echo ""
   cat  ${WORK_DIR}/retry_tests 2>/dev/null | cut -d ' ' -f 2 || true
+  if [ ! -s ${WORK_DIR}/retry_tests ]; then echo "--- None ---"; fi
   echo "======================================================="
   echo "==== FAILED TESTS "
   echo ""
   cat  ${WORK_DIR}/failed_tests | cut -d ' ' -f 2 || true
+  if [ ! -s ${WORK_DIR}/failed_tests ]; then echo "--- None ---"; fi
   echo "======================================================="
 
   # the caller (CCV_config.sh) will check check which of *_tests_.... files is empty to decide

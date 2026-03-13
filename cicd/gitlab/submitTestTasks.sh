@@ -1,4 +1,5 @@
 #! /bin/bash
+echo "Starting submitTestTasks.sh"
 set -euo pipefail
 
 echo "Verbose env.var. is set to $Verbose"

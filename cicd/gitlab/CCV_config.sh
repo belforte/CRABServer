@@ -1,5 +1,16 @@
 #! /bin/bash
+# this script is called in gitlab pipeline to execute ClientConfigurationValidation step
+# it assumes to be run with PWD as the top of a CRABServer GH clone
+
 set -euo pipefail
+
+echo "Verbose env.var. is set to $Verbose"
+export Verbose
+if [ X$Verbose == "X3" ]
+then
+  echo "enable bash trace"
+  set -x
+fi
 
 # default values
 export Client_Configuration_Validation="${Client_Configuration_Validation:-}"
@@ -21,8 +32,8 @@ if [ ! -d "$WORK_DIR" ]; then
 fi
 pushd "${WORK_DIR}"
 
-# use CMSSW_15 and python3 to run CCV tests, they are independent of which
-# releae was used for submitting
+# use CMSSW_15 and python3 to run CCV tests, those tests do not depend on
+# what release was used for submitting
 CMSSW_release=CMSSW_15_0_18
 SCRAM_ARCH=el8_amd64_gcc12
 scramprefix=el8
@@ -33,31 +44,6 @@ ERR=false;
 CCV_EC=$?
 echo "clientConfigurationValidation.sh script ended wih exit code $CCV_EC"
 ERR=$([[ $CCV_EC -eq 0 || $CCV_EC -eq 2 ]] && echo "false" || echo "true") #ERR is true if return is other than 0 or 2
-
-
-## Get configuration from CMSSW_release
-#CONFIG_LINE="$(grep "CMSSW_release=${CMSSW_release};" "${ROOT_DIR}"/test/testingConfigs)"
-#SCRAM_ARCH="$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep SCRAM_ARCH | sed 's|SCRAM_ARCH=||')"
-#inputDataset="$(echo "${CONFIG_LINE}" | tr ';' '\n' | grep inputDataset | sed 's|inputDataset=||')"
-## see https://github.com/dmwm/WMCore/issues/11051 for info about SCRAM_ARCH formatting
-#singularity="$(echo "${SCRAM_ARCH}" | cut -d"_" -f 1 | tail -c 2)"
-#export SCRAM_ARCH inputDataset singularity
-
-#chmod +x ${ROOT_DIR}/cicd/gitlab/clientConfigurationValidation.sh
-#if [ "X${singularity}" == X6 ] || [ "X${singularity}" == X7 ] || [ "X${singularity}" == X8 ]; then
-#    echo "Starting singularity ${singularity} container."
-#    if [ "X${singularity}" == X6 ]; then scramprefix=cc${singularity}; fi
-#    if [ "X${singularity}" == X7 ]; then scramprefix=el${singularity}; fi
-#    if [ "X${singularity}" == X8 ]; then scramprefix=el${singularity}; fi
-#    ERR=false;
-#    /cvmfs/cms.cern.ch/common/cmssw-${scramprefix} -- "${ROOT_DIR}/cicd/gitlab/clientConfigurationValidation.sh"
-#    CCV_EC=$?
-#    echo "clientConfigurationValidation.sh script ended wih exit code $CCV_EC"
-#    ERR=$([[ $CCV_EC -eq 0 || $CCV_EC -eq 2 ]] && echo "false" || echo "true") #ERR is true if return is other than 0 or 2
-#else
-#    echo "!!! I am not prepared to run for slc${singularity}."
-#    exit 1
-#fi
 
 if [ "$ERR" == true ]; then
     echo "clientConfigurationValidation.sh script failed to run properly."

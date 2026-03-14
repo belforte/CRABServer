@@ -446,7 +446,7 @@ name = 'sendExternalFolder'
 changeDict = {'param': name, 'value': 'True', 'section': 'JobType'}
 confChangesList = [changeDict]
 testSubmitScript = """
-lookInTarFor "^external/" ${workDir}/inputs/*default.tgz || echo "sendExternalFolder: Tarlookup failure"
+lookInTarFor "^CMSSW_.*external/" ${workDir}/inputs/*default.tgz || echo "sendExternalFolder: Tarlookup failure"
 """
 validationScript = """
 checkStatus ${taskName} SUBMITTED

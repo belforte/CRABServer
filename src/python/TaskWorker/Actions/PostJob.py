@@ -2228,6 +2228,8 @@ class PostJob():
                             self.sendMaxFatalAsoMailToOperators()
                         self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
                         return JOB_RETURN_CODES.DAG_ABORT, retmsg, ASOExitCode
+                    self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
+                    return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
             except RecoverableStageoutError as rse:
                 retmsg = "Got recoverable stageout exception:\n%s" % (str(rse))
                 self.logger.error(retmsg)

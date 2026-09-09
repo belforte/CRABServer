@@ -2203,32 +2203,31 @@ class PostJob():
                 self.recordPermanentStageoutError(exitCode=ASOExitCode)
                 self.logger.info("====== Finished to check for ASO transfers.")
                 if self.tooManyPermanentStageoutErrors():
-                    if self.maxFatalAsoDryRun:
-                        self.logger.error("**** Too Many Fatal ASO errors. ****")
-                        self.logger.error("**** If dry run were False, I would abort DAG and kill task ****")
-                        # send msg to operators (only once per task) and go on normally
-                        if self.maxFatalAsoNotificationMail and not self.maxFatalAsoMailAlreadySent():
-                            self.sendMaxFatalAsoMailToOperators()
+                    self.logger.error("**** Too Many Fatal ASO errors. ****")
+                    with getLock('actOnTooManyASOErrors.lock'):
+                        if self.maxFatalAsoDryRun:
+                            self.logger.error("**** If dry run were False, I would abort DAG and kill task ****")
+                            # send msg to operators (only once per task) and go on normally
+                            if self.maxFatalAsoNotificationMail and not self.maxFatalAsoMailAlreadySent():
+                                self.sendMaxFatalAsoMailToOperators()
+                            self.logger.info("Tag Jobs as ForcefullyTerminated")
+                            self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='DryASO')
+                            self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
+                            return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
+                        # abort DAG, kill task and tag jobs
+                        self.logger.error("**** Abort DAG and kill task ****")
+                        killMsg = "Killed by CRAB because output can't be placed at destination site."
+                        killMsg += "\nMake sure that your destination site is healthy and"
+                        killMsg += "\nthat you have enough free disk space there"
+                        killMsg += " before submitting again"
+                        self.killThisTask(killMsg)
                         self.logger.info("Tag Jobs as ForcefullyTerminated")
-                        self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='DryASO')
+                        self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='ASO')
+                        retmsg += '\ntoo Many Fatal ASO errors. Abort task DAG'
+                        if self.maxFatalAsoNotificationMail:
+                            self.sendMaxFatalAsoMailToOperators()
                         self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                        return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
-                    # abort DAG, kill task and tag jobs
-                    self.logger.error("**** Too Many Fatal ASO errors. Abort DAG and kill task ****")
-                    killMsg = "Killed by CRAB because output can't be placed at destination site."
-                    killMsg += "\nMake sure that your destination site is healthy and"
-                    killMsg += "\nthat you have enough free disk space there"
-                    killMsg += " before submitting again"
-                    self.killThisTask(killMsg)
-                    self.logger.info("Tag Jobs as ForcefullyTerminated")
-                    self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='ASO')
-                    retmsg += '\ntoo Many Fatal ASO errors. Abort task DAG'
-                    if self.maxFatalAsoNotificationMail:
-                        self.sendMaxFatalAsoMailToOperators()
-                    self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                    return JOB_RETURN_CODES.DAG_ABORT, retmsg, ASOExitCode
-                self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
+                        return JOB_RETURN_CODES.DAG_ABORT, retmsg, ASOExitCode
             except RecoverableStageoutError as rse:
                 retmsg = "Got recoverable stageout exception:\n%s" % (str(rse))
                 self.logger.error(retmsg)

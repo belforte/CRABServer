@@ -2204,7 +2204,7 @@ class PostJob():
                 self.logger.info("====== Finished to check for ASO transfers.")
                 if self.tooManyPermanentStageoutErrors():
                     self.logger.error("**** Too Many Fatal ASO errors. ****")
-                    with getLock('actOnTooManyASOErrors.lock'):
+                    with getLock('actOnTooManyASOErrorsrm -r'):
                         if self.maxFatalAsoDryRun:
                             self.logger.error("**** If dry run were False, I would abort DAG and kill task ****")
                             # send msg to operators (only once per task) and go on normally

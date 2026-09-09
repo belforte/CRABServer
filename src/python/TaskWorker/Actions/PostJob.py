@@ -2194,17 +2194,18 @@ class PostJob():
                     #if we need to defer the postjob execution stop here!
                     return ret_code, "", ASOExitCode
             except PermanentStageoutError as pse:
-                retmsg = "Got fatal stageout exception:\n%s" % (str(pse))
-                self.logger.error(retmsg)
+                retMsg = "Got fatal stageout exception:\n%s" % (str(pse))
+                self.logger.error(retMsg)
                 ASOExitCode = mostCommon(self.stageout_exit_codes, 60324)
                 msg = "There was at least one permanent stageout error; user will need to resubmit."
                 self.logger.error(msg)
                 self.set_dashboard_state('FAILED', exitCode=ASOExitCode)
                 self.recordPermanentStageoutError(exitCode=ASOExitCode)
                 self.logger.info("====== Finished to check for ASO transfers.")
+                retCode = JOB_RETURN_CODES.FATAL_ERROR
                 if self.tooManyPermanentStageoutErrors():
                     self.logger.error("**** Too Many Fatal ASO errors. ****")
-                    with getLock('actOnTooManyASOErrorsrm -r'):
+                    with getLock('actOnTooManyASOErrors'):
                         if self.maxFatalAsoDryRun:
                             self.logger.error("**** If dry run were False, I would abort DAG and kill task ****")
                             # send msg to operators (only once per task) and go on normally
@@ -2212,35 +2213,38 @@ class PostJob():
                                 self.sendMaxFatalAsoMailToOperators()
                             self.logger.info("Tag Jobs as ForcefullyTerminated")
                             self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='DryASO')
-                            self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                            return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
-                        # abort DAG, kill task and tag jobs
-                        self.logger.error("**** Abort DAG and kill task ****")
-                        killMsg = "Killed by CRAB because output can't be placed at destination site."
-                        killMsg += "\nMake sure that your destination site is healthy and"
-                        killMsg += "\nthat you have enough free disk space there"
-                        killMsg += " before submitting again"
-                        self.killThisTask(killMsg)
-                        self.logger.info("Tag Jobs as ForcefullyTerminated")
-                        self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='ASO')
-                        retmsg += '\ntoo Many Fatal ASO errors. Abort task DAG'
-                        if self.maxFatalAsoNotificationMail:
-                            self.sendMaxFatalAsoMailToOperators()
-                        self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                        return JOB_RETURN_CODES.DAG_ABORT, retmsg, ASOExitCode
+                            #self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
+                            #return JOB_RETURN_CODES.FATAL_ERROR, retMsg, ASOExitCode
+                        else:
+                            # abort DAG, kill task and tag jobs
+                            self.logger.error("**** Abort DAG and kill task ****")
+                            retMsg += '\ntoo Many Fatal ASO errors. Abort task DAG'
+                            retCode = JOB_RETURN_CODES.DAG_ABORT
+                            self.logger.info("Tag Jobs as ForcefullyTerminated")
+                            self.tagAllJobsInTask(ad='CRAB_ForcefullyTerminated', value='ASO')
+                            killMsg = "Killed by CRAB because output can't be placed at destination site."
+                            killMsg += "\nMake sure that your destination site is healthy and"
+                            killMsg += "\nthat you have enough free disk space there"
+                            killMsg += " before submitting again"
+                            self.killThisTask(killMsg)
+                            if self.maxFatalAsoNotificationMail:
+                                self.sendMaxFatalAsoMailToOperators()
+                            #self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
+                            #return JOB_RETURN_CODES.DAG_ABORT, retMsg, ASOExitCode
+                # next line also sets classAd LeaveJobInQueue to False. No more classAd editing after that
                 self.set_state_ClassAds('FAILED', exitCode=ASOExitCode)
-                return JOB_RETURN_CODES.FATAL_ERROR, retmsg, ASOExitCode
+                return retCode, retMsg, ASOExitCode
             except RecoverableStageoutError as rse:
-                retmsg = "Got recoverable stageout exception:\n%s" % (str(rse))
-                self.logger.error(retmsg)
+                retMsg = "Got recoverable stageout exception:\n%s" % (str(rse))
+                self.logger.error(retMsg)
                 msg = "These are all recoverable stageout errors; automatic resubmit is possible."
                 exitCode = mostCommon(self.stageout_exit_codes, 60324)
                 self.logger.error(msg)
                 self.logger.info("====== Finished to check for ASO transfers.")
-                return self.check_retry_count(exitCode=exitCode), retmsg, ASOExitCode
+                return self.check_retry_count(exitCode=exitCode), retMsg, ASOExitCode
             except Exception as ex:
-                retmsg = "Fatal PostJob error during ASO checking: %s" % (str(ex))
-                self.logger.exception(retmsg)
+                retMsg = "Fatal PostJob error during ASO checking: %s" % (str(ex))
+                self.logger.exception(retMsg)
                 raise
             finally:
                 # update job exit code to represent ASO error
@@ -2641,9 +2645,9 @@ class PostJob():
                 try:
                     self.crabserver.post(api="filetransfers", data=encodeRequest(newDoc))
                 except Exception as ex:  # pylint: disable=broad-except
-                    retmsg = "Fatal error updating publication flags of transfered files: %s" % (str(ex))
-                    self.logger.exception(retmsg)
-                    raise Exception(retmsg) from ex  # pylint: disable=broad-exception-raised
+                    retMsg = "Fatal error updating publication flags of transfered files: %s" % (str(ex))
+                    self.logger.exception(retMsg)
+                    raise Exception(retMsg) from ex  # pylint: disable=broad-exception-raised
         self.logger.info("====== Finished to update publication flags of transfered files.")
 
     # = = = = = PostJob = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =

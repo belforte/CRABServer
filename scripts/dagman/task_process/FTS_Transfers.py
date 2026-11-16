@@ -94,6 +94,38 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+def sendMailAboutLimitedProxyToOperators(proxyFile):
+    """
+    tell operators that we found a limited proxy
+    """
+    # if mail was sent already: skip
+    if os.path.exists("task_process/LIMITED_PROXY_MAIL_SENT"):
+        return
+    subject = "Limited proxy found"
+    recipient = "cms-service-crab-operators@cern.ch"
+    recipient = "stefano.belforte@cern.ch"
+    webDir = os.path.realpath("WEB_DIR")
+    task = os.path.basename(webDir)
+    cmd = f"openssl crl2pkcs7 -nocrl -certfile {proxyFile} | openssl pkcs7 -print_certs -text -noout"
+    cmd += " | grep  -E 'Subject:|Policy Language:'"
+    result = subprocess.run(cmd, shell=True, capture_output=True, check=True)
+    fullPolicies = result.stdout.decode("utf-8").strip()
+    body = f"task: {task}"
+    body += f"\nWEB_DIR: {webDir}"
+    body += f"\nproxy: {proxyFile}"
+    body += f"\nPolicies:\n{fullPolicies}  "
+    logging.info("Sending email to %s", recipient)
+    ret = subprocess.run(["/usr/bin/mail", "-s", subject, recipient],
+                         input=body, check=False, capture_output=True, encoding='utf-8')
+    if ret.returncode:
+        logging.error("Failed to send mail to %s", recipient)
+        logging.error("stdout: %s", ret.stdout)
+        logging.error("stderr: %s", ret.stderr)
+    else:
+        logging.info("Mail sent to operators about limited proxy")
+        with open("task_process/LIMITED_PROXY_MAIL_SENT", 'w', encoding='utf-8') as fp:
+            fp.close()
+
 
 def mark_transferred(ids, crabserver):
     """
@@ -679,6 +711,20 @@ def algorithm():
                  delegationExpiration, int(delegationHours))
     if not int(delegationHours) > 12:
         logging.error("FTS DELEGATION TIME TOO SHORT: %s", int(delegationHours))
+
+    # check if this is a limited proxy ( #9464 )
+    cmd = f"openssl crl2pkcs7 -nocrl -certfile {proxy} | openssl pkcs7 -print_certs -text -noout"
+    cmd += " | grep  'Policy Language:'"
+    result = subprocess.run(cmd, shell=True, capture_output=True, check=True)
+    policies = result.stdout.decode("utf-8").strip().split('\n')
+    # ideally the proxy only contains "Inherit all" policies
+    ok = all(['Inherit all' in policy for policy in policies])
+    # if ok and mail was sent, reset flag to be ready for a new limited proxy occurrence
+    if ok and os.path.exists("task_process/LIMITED_PROXY_MAIL_SENT"):
+        os.unlink("task_process/LIMITED_PROXY_MAIL_SENT")
+    if not ok:
+        # OUCH, we have a limited proxy in the delegation chain !!
+        sendMailAboutLimitedProxyToOperators(proxy)
 
     # instantiate an object to talk with CRAB REST server
     try:

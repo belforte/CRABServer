@@ -342,12 +342,31 @@ def extractUserSandbox(sandbox):
 
     print(f"==== Sandbox untarring FINISHED at {UTCNow()} ====")
 
+def getScramDiagnostic(scram=None):
+    """ get scram diagnostics with length limit """
+    cmd = scram.lastExecuted
+    rc = scram.code
+    stdout = scram.stdout
+    if len(stdout) > 1000:
+        stdout = stdout[:300] + " [...snip...] " + stdout[-300:]
+    stderr = scram.stderr
+    if len(stderr) > 1000:
+        stderr = stderr[:300] + " [...snip...] " + stderr[-300:]
+    diagnostic = "Scram Command Diagnostic Info:"
+    diagnostic += f"\n Executed: {cmd}"
+    diagnostic += f"\n ExitCode: {rc}"
+    diagnostic += f"\n Stdout: {stdout}"
+    diagnostic += f"\n Stderr: {stderr}"
+    return diagnostic
+
+
+
 
 def getProv(filename='', scramTool=None):
     with tempSetLogLevel(logger=logging.getLogger(), level=logging.ERROR):
         retCode = scramTool(f"edmProvDump {filename}", runtimeDir=os.getcwd())
     if retCode > 0:
-        scramMsg = scramTool.diagnostic()
+        scramMsg = getScramDiagnostic(scramTool)
         mesg = f"FAILED ({EC_CMSRunWrapper})\n"
         mesg += f"Error getting pset hash from file.\n\tCommand:edmProvDump {filename}\n\tScram Diagnostic {scramMsg}"
         print(mesg)
